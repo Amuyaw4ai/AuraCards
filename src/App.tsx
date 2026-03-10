@@ -30,7 +30,10 @@ import {
   Layout,
   Sun,
   Moon,
-  MoreVertical
+  MoreVertical,
+  Droplets,
+  TreePine,
+  Square
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -320,6 +323,119 @@ declare global {
   }
 }
 
+function CustomDropdown({ value, options, onChange }: { value: string, options: { value: string, label: string, icon?: React.ReactNode }[], onChange: (val: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.value === value) || options[0];
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full glass-input rounded-2xl p-4 pr-12 text-base font-bold text-left flex items-center gap-3 transition-all hover:shadow-md"
+      >
+        {selectedOption.icon && <span className="text-xl">{selectedOption.icon}</span>}
+        <span className="flex-1">{selectedOption.label}</span>
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-500 dark:text-purple-400">
+          <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute z-50 w-full mt-2 bg-white dark:bg-stone-900 rounded-2xl overflow-hidden shadow-xl border border-stone-200 dark:border-stone-800"
+          >
+            <div className="max-h-60 overflow-y-auto py-2 custom-scrollbar">
+              {options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
+                    value === option.value 
+                      ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-bold' 
+                      : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 font-medium'
+                  }`}
+                >
+                  {option.icon && <span className="text-xl">{option.icon}</span>}
+                  {option.label}
+                  {value === option.value && <Check className="w-4 h-4 ml-auto" />}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+const BackgroundOrbs = () => {
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
+      <motion.div
+        animate={{
+          x: [0, 100, 0],
+          y: [0, -100, 0],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "linear"
+        }}
+        className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 blur-[100px]"
+      />
+      <motion.div
+        animate={{
+          x: [0, -100, 0],
+          y: [0, 100, 0],
+          scale: [1, 1.5, 1],
+        }}
+        transition={{
+          duration: 25,
+          repeat: Infinity,
+          ease: "linear"
+        }}
+        className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-rose-500/10 dark:bg-rose-500/20 blur-[120px]"
+      />
+      <motion.div
+        animate={{
+          x: [0, 50, 0],
+          y: [0, 50, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 15,
+          repeat: Infinity,
+          ease: "linear"
+        }}
+        className="absolute top-[40%] left-[60%] w-[30vw] h-[30vw] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[80px]"
+      />
+    </div>
+  );
+};
+
 export default function App() {
   const [step, setStep] = useState<'form' | 'preview'>('form');
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -339,6 +455,7 @@ export default function App() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [appTheme, setAppTheme] = useState('minimalist');
   const [showMenu, setShowMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -349,7 +466,12 @@ export default function App() {
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [isDarkMode]);
+    
+    // Remove all theme classes
+    document.documentElement.classList.remove('theme-minimalist', 'theme-ocean', 'theme-forest', 'theme-sunset');
+    // Add selected theme class
+    document.documentElement.classList.add(`theme-${appTheme}`);
+  }, [isDarkMode, appTheme]);
   
   const [cardData, setCardData] = useState<CardData>({
     occasion: 'Birthday',
@@ -667,7 +789,8 @@ export default function App() {
   if (hasKey === false) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8">
-        <div className="max-w-md text-center space-y-6 bg-white/90 backdrop-blur-md p-10 rounded-[32px] card-shadow border border-white/20">
+        <BackgroundOrbs />
+        <div className="max-w-md text-center space-y-6 glass-panel p-10 rounded-[32px]">
           <AlertCircle className="w-16 h-16 text-rose-500 mx-auto" />
           <h2 className="text-3xl serif italic text-stone-900">API Key Required</h2>
           <p className="text-stone-600 leading-relaxed">
@@ -679,7 +802,7 @@ export default function App() {
           >
             Select API Key
           </button>
-          <p className="text-xs text-stone-400">
+          <p className="text-xs text-stone-600 dark:text-stone-400">
             Visit <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="underline">billing documentation</a> for more info.
           </p>
         </div>
@@ -689,6 +812,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8" onPaste={handlePaste}>
+      <BackgroundOrbs />
       {/* History Sidebar */}
       <AnimatePresence>
         {showTemplates && (
@@ -705,7 +829,7 @@ export default function App() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-white/95 dark:bg-rose-950/95 backdrop-blur-2xl z-50 shadow-2xl border-l border-white/20 dark:border-rose-800/20 p-8 overflow-y-auto"
+              className="fixed right-0 top-0 bottom-0 w-full max-w-xl glass-panel z-50 p-8 overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
@@ -718,7 +842,7 @@ export default function App() {
                   onClick={() => setShowTemplates(false)}
                   className="p-2 hover:bg-stone-100 dark:hover:bg-rose-900/50 rounded-full transition-colors"
                 >
-                  <X className="w-6 h-6 text-stone-400 dark:text-rose-300/50" />
+                  <X className="w-6 h-6 text-stone-600 dark:text-rose-300/50" />
                 </button>
               </div>
 
@@ -726,7 +850,7 @@ export default function App() {
                 {TEMPLATES.map((template) => (
                   <div 
                     key={template.id} 
-                    className="group bg-white dark:bg-rose-900/30 rounded-[32px] border border-stone-100 dark:border-rose-900/10 overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer"
+                    className="group glass-panel rounded-[32px] overflow-hidden hover:shadow-xl transition-all cursor-pointer"
                     onClick={() => {
                       setCardData({ 
                         ...cardData, 
@@ -755,16 +879,16 @@ export default function App() {
                           <p className="text-white/80 text-sm leading-tight">{template.description}</p>
                         </div>
                       </div>
-                      <div className="absolute top-4 right-4 bg-white/90 dark:bg-rose-900/90 backdrop-blur-md px-4 py-2 rounded-full text-[10px] font-bold text-rose-600 dark:text-rose-400 shadow-lg uppercase tracking-widest">
+                      <div className="absolute top-4 right-4 glass-panel px-4 py-2 rounded-full text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest">
                         {template.settings.isSelf ? 'Self-Integration' : 'Gift Mode'}
                       </div>
                     </div>
-                    <div className="p-6 flex items-center justify-between bg-stone-50/50 dark:bg-rose-950/50">
+                    <div className="p-6 flex items-center justify-between bg-white/30 dark:bg-rose-950/50">
                       <div className="flex gap-2">
-                        <span className="px-3 py-1 bg-white dark:bg-rose-900/50 border border-stone-100 dark:border-rose-800/20 rounded-full text-[10px] uppercase font-bold text-stone-500 dark:text-rose-300/50">
+                        <span className="px-3 py-1 glass-input rounded-full text-[10px] uppercase font-bold text-stone-700 dark:text-rose-300/50">
                           {template.settings.outputStyle}
                         </span>
-                        <span className="px-3 py-1 bg-white dark:bg-rose-900/50 border border-stone-100 dark:border-rose-800/20 rounded-full text-[10px] uppercase font-bold text-stone-500 dark:text-rose-300/50">
+                        <span className="px-3 py-1 glass-input rounded-full text-[10px] uppercase font-bold text-stone-700 dark:text-rose-300/50">
                           {template.settings.theme}
                         </span>
                       </div>
@@ -793,7 +917,7 @@ export default function App() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white/95 dark:bg-rose-950/95 backdrop-blur-2xl z-50 shadow-2xl border-l border-white/20 dark:border-rose-800/20 p-8 overflow-y-auto"
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md glass-panel z-50 p-8 overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
@@ -806,21 +930,21 @@ export default function App() {
                   onClick={() => setShowHistory(false)}
                   className="p-2 hover:bg-stone-100 dark:hover:bg-rose-900/50 rounded-full transition-colors"
                 >
-                  <X className="w-6 h-6 text-stone-400 dark:text-rose-300/50" />
+                  <X className="w-6 h-6 text-stone-600 dark:text-rose-300/50" />
                 </button>
               </div>
 
               {history.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
-                  <div className="p-6 bg-stone-50 dark:bg-rose-900/20 rounded-full">
-                    <ImageIcon className="w-12 h-12 text-stone-200 dark:text-rose-800" />
+                  <div className="p-6 bg-white/50 dark:bg-rose-900/20 rounded-full">
+                    <ImageIcon className="w-12 h-12 text-stone-300 dark:text-rose-800" />
                   </div>
-                  <p className="text-stone-400 dark:text-rose-300/50 font-medium">Your creative history is empty.<br/>Generate your first card!</p>
+                  <p className="text-stone-600 dark:text-rose-300/50 font-medium">Your creative history is empty.<br/>Generate your first card!</p>
                 </div>
               ) : (
                 <div className="space-y-6">
                   {history.map((item) => (
-                    <div key={item.id} className="group bg-white dark:bg-rose-900/30 rounded-3xl border border-stone-100 dark:border-rose-900/10 overflow-hidden shadow-sm hover:shadow-md transition-all">
+                    <div key={item.id} className="group glass-panel rounded-3xl overflow-hidden hover:shadow-md transition-all">
                       <div className="aspect-square relative">
                         <img 
                           src={item.data.imageUrl} 
@@ -830,14 +954,14 @@ export default function App() {
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                           <button 
                             onClick={() => restoreFromHistory(item)}
-                            className="p-3 bg-white dark:bg-rose-800 rounded-full text-indigo-600 dark:text-rose-100 hover:scale-110 transition-transform shadow-lg"
+                            className="p-3 glass-panel rounded-full text-indigo-600 dark:text-rose-100 hover:scale-110 transition-transform shadow-lg"
                             title="Restore & View"
                           >
                             <Maximize2 className="w-5 h-5" />
                           </button>
                           <button 
                             onClick={() => handleDownload(item.data.imageUrl, `aura-card-${item.data.recipient.toLowerCase()}.png`)}
-                            className="p-3 bg-white dark:bg-rose-800 rounded-full text-rose-600 dark:text-rose-100 hover:scale-110 transition-transform shadow-lg"
+                            className="p-3 glass-panel rounded-full text-rose-600 dark:text-rose-100 hover:scale-110 transition-transform shadow-lg"
                             title="Download"
                           >
                             <Download className="w-5 h-5" />
@@ -847,14 +971,14 @@ export default function App() {
                       <div className="p-4 flex items-center justify-between">
                         <div>
                           <p className="font-bold text-stone-800 dark:text-rose-50">For {item.data.recipient}</p>
-                          <p className="text-[10px] text-stone-400 dark:text-rose-300/50 uppercase tracking-widest flex items-center gap-1">
+                          <p className="text-[10px] text-stone-600 dark:text-rose-300/50 uppercase tracking-widest flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {new Date(item.timestamp).toLocaleDateString()}
                           </p>
                         </div>
                         <button 
                           onClick={() => removeFromHistory(item.id)}
-                          className="p-2 text-stone-300 dark:text-rose-800 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+                          className="p-2 text-stone-600 dark:text-rose-800 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -875,20 +999,20 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-center gap-2 mb-2"
         >
-          <Sparkles className="w-8 h-8 text-[#d4af37]" />
-          <h1 className="text-5xl md:text-6xl serif font-light tracking-tight bg-gradient-to-r from-[#d4af37] via-[#2d2a26] dark:via-[#f5f5f5] to-[#d4af37] bg-clip-text text-transparent">AuraCards</h1>
+          <Sparkles className="w-8 h-8 text-indigo-500 dark:text-purple-400" />
+          <h1 className="text-5xl md:text-6xl serif font-light tracking-tight iridescent-text">AuraCards</h1>
         </motion.div>
-        <p className="text-stone-500 dark:text-stone-400 text-xs uppercase tracking-[0.5em] font-bold">Nano Banana Pro Edition</p>
+        <p className="text-stone-700 dark:text-stone-400 text-xs uppercase tracking-[0.5em] font-bold">Nano Banana Pro Edition</p>
 
         {/* Menu Toggle */}
         <div className="fixed top-4 right-4 md:top-8 md:right-8 z-[100]">
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-3 bg-white/90 dark:bg-stone-900/90 backdrop-blur-md rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xl hover:shadow-2xl hover:scale-110 transition-all group"
+              className="p-3 glass-panel rounded-2xl hover:shadow-2xl hover:scale-110 transition-all group"
               title="Menu"
             >
-              <MoreVertical className="w-6 h-6 text-[#d4af37] group-hover:rotate-90 transition-transform" />
+              <MoreVertical className="w-6 h-6 text-indigo-500 dark:text-purple-400 group-hover:rotate-90 transition-transform" />
             </button>
 
             <AnimatePresence>
@@ -897,7 +1021,7 @@ export default function App() {
                   initial={{ opacity: 0, scale: 0.95, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="absolute right-0 mt-3 w-48 bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl rounded-2xl border border-stone-200 dark:border-stone-800 shadow-2xl overflow-hidden"
+                  className="absolute right-0 mt-3 w-48 bg-white dark:bg-stone-900 rounded-2xl overflow-hidden shadow-xl border border-stone-200 dark:border-stone-800 z-50"
                 >
                   <div className="p-2 flex flex-col gap-1">
                     <button
@@ -918,6 +1042,42 @@ export default function App() {
                         {isDarkMode ? 'Light Mode' : 'Dark Mode'}
                       </span>
                     </button>
+
+                    <div className="px-3 py-2">
+                      <div className="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2">Workspace Theme</div>
+                      <div className="grid grid-cols-4 gap-1">
+                        <button
+                          onClick={() => { setAppTheme('minimalist'); setShowMenu(false); }}
+                          className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'minimalist' ? 'bg-stone-200 dark:bg-stone-700 text-stone-900 dark:text-white' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 dark:text-stone-400'}`}
+                          title="Minimalist"
+                        >
+                          <Square className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => { setAppTheme('ocean'); setShowMenu(false); }}
+                          className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'ocean' ? 'bg-sky-200 dark:bg-sky-900 text-sky-900 dark:text-sky-100' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-sky-500 dark:text-sky-400'}`}
+                          title="Ocean Breeze"
+                        >
+                          <Droplets className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => { setAppTheme('forest'); setShowMenu(false); }}
+                          className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'forest' ? 'bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-emerald-500 dark:text-emerald-400'}`}
+                          title="Forest Canopy"
+                        >
+                          <TreePine className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => { setAppTheme('sunset'); setShowMenu(false); }}
+                          className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'sunset' ? 'bg-orange-200 dark:bg-orange-900 text-orange-900 dark:text-orange-100' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-orange-500 dark:text-orange-400'}`}
+                          title="Sunset Glow"
+                        >
+                          <Sun className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="h-px bg-stone-100 dark:bg-stone-800 my-1" />
 
                     <button
                       onClick={() => {
@@ -965,55 +1125,48 @@ export default function App() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="bg-white/80 dark:bg-stone-900/80 backdrop-blur-xl rounded-[40px] p-10 md:p-12 card-shadow space-y-12 border border-white/40 dark:border-stone-800/40"
+              className="glass-panel rounded-[40px] p-10 md:p-12 space-y-12"
             >
               {/* Occasion Selector - Dropdown */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 text-stone-900 dark:text-stone-100">
-                    <div className="p-2 bg-stone-100 dark:bg-stone-800 rounded-xl">
-                      <Sparkles className="w-5 h-5 text-[#d4af37]" />
+                  <div className="flex items-center gap-3 text-black dark:text-white">
+                    <div className="p-2 bg-white/50 dark:bg-white/10 rounded-xl">
+                      <Sparkles className="w-5 h-5 text-indigo-500 dark:text-purple-400" />
                     </div>
                     <h2 className="text-xl serif font-bold">Occasion</h2>
                   </div>
                 </div>
-                <div className="relative">
-                  <select
-                    value={cardData.occasion}
-                    onChange={(e) => setCardData({ ...cardData, occasion: e.target.value as keyof typeof OCCASIONS })}
-                    className="w-full bg-white/50 dark:bg-rose-950/50 border-2 border-indigo-50 dark:border-indigo-900/30 rounded-2xl p-4 pr-12 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all text-base outline-none appearance-none font-bold text-stone-700 dark:text-rose-100"
-                  >
-                    {(Object.keys(OCCASIONS) as Array<keyof typeof OCCASIONS>).map((occ) => (
-                      <option key={occ} value={occ}>
-                        {OCCASIONS[occ].icon} {OCCASIONS[occ].label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-400">
-                    <ChevronDown className="w-5 h-5" />
-                  </div>
-                </div>
+                <CustomDropdown
+                  value={cardData.occasion}
+                  onChange={(val) => setCardData({ ...cardData, occasion: val as keyof typeof OCCASIONS })}
+                  options={(Object.keys(OCCASIONS) as Array<keyof typeof OCCASIONS>).map(occ => ({
+                    value: occ,
+                    label: OCCASIONS[occ].label,
+                    icon: OCCASIONS[occ].icon
+                  }))}
+                />
               </div>
 
               {/* Recipient Details - Standard */}
               <div className="space-y-8">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 text-stone-900 dark:text-stone-100">
-                    <div className="p-2 bg-stone-100 dark:bg-stone-800 rounded-xl">
-                      <Heart className="w-5 h-5 text-[#d4af37]" />
+                  <div className="flex items-center gap-3 text-black dark:text-white">
+                    <div className="p-2 bg-white/50 dark:bg-white/10 rounded-xl">
+                      <Heart className="w-5 h-5 text-indigo-500 dark:text-purple-400" />
                     </div>
                     <h2 className="text-xl serif font-bold">Details</h2>
                   </div>
-                  <div className="flex bg-stone-100 dark:bg-stone-950/50 p-1 rounded-xl">
+                  <div className="flex bg-white/50 dark:bg-stone-950/50 p-1 rounded-xl">
                     <button 
                       onClick={() => setCardData({...cardData, isSelf: false})}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${!cardData.isSelf ? 'bg-white dark:bg-[#d4af37] shadow-sm text-stone-900 dark:text-white' : 'text-stone-400 dark:text-stone-500'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${!cardData.isSelf ? 'iridescent-bg shadow-sm text-white' : 'text-stone-600 dark:text-stone-500'}`}
                     >
                       Gift
                     </button>
                     <button 
                       onClick={() => setCardData({...cardData, isSelf: true})}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${cardData.isSelf ? 'bg-white dark:bg-[#d4af37] shadow-sm text-stone-900 dark:text-white' : 'text-stone-400 dark:text-stone-500'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${cardData.isSelf ? 'iridescent-bg shadow-sm text-white' : 'text-stone-600 dark:text-stone-500'}`}
                     >
                       Self
                     </button>
@@ -1022,7 +1175,7 @@ export default function App() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
+                    <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">
                       {cardData.isSelf ? 'My Name' : 'Name'}
                     </label>
                     <input 
@@ -1030,13 +1183,13 @@ export default function App() {
                       value={cardData.recipient}
                       onChange={e => setCardData({...cardData, recipient: e.target.value})}
                       placeholder={cardData.isSelf ? 'Your Name' : 'e.g. Sarah'}
-                      className="w-full bg-white/50 dark:bg-stone-950/50 border-2 border-[#fdfbf7] dark:border-stone-900/30 rounded-2xl p-4 focus:ring-2 focus:ring-stone-200 focus:border-stone-300 transition-all text-base outline-none dark:text-stone-50"
+                      className="w-full glass-input rounded-2xl p-4 text-base outline-none"
                     />
                   </div>
                   
                   {OCCASIONS[cardData.occasion].field && (
                     <div className="space-y-2">
-                      <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
+                      <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">
                         {OCCASIONS[cardData.occasion].label === 'Anniversary' ? 'Years' : 
                          OCCASIONS[cardData.occasion].label === 'Graduation' ? 'Degree' :
                          OCCASIONS[cardData.occasion].label === 'Wedding' ? 'Couple' :
@@ -1047,13 +1200,13 @@ export default function App() {
                         value={cardData[OCCASIONS[cardData.occasion].field as keyof CardData] as string}
                         onChange={e => setCardData({...cardData, [OCCASIONS[cardData.occasion].field as string]: e.target.value})}
                         placeholder={OCCASIONS[cardData.occasion].placeholder}
-                        className="w-full bg-white/50 dark:bg-stone-950/50 border-2 border-[#fdfbf7] dark:border-stone-900/30 rounded-2xl p-4 focus:ring-2 focus:ring-stone-200 focus:border-stone-300 transition-all text-base outline-none dark:text-stone-50"
+                        className="w-full glass-input rounded-2xl p-4 text-base outline-none"
                       />
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
+                    <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">
                       {cardData.isSelf ? 'My Focus' : 'Relation'}
                     </label>
                     <input 
@@ -1061,14 +1214,14 @@ export default function App() {
                       value={cardData.relationship}
                       onChange={e => setCardData({...cardData, relationship: e.target.value})}
                       placeholder={cardData.isSelf ? 'e.g. Personal Growth' : 'e.g. Sister'}
-                      className="w-full bg-white/50 dark:bg-stone-950/50 border-2 border-[#fdfbf7] dark:border-stone-900/30 rounded-2xl p-4 focus:ring-2 focus:ring-stone-200 focus:border-stone-300 transition-all text-base outline-none dark:text-stone-50"
+                      className="w-full glass-input rounded-2xl p-4 text-base outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
+                    <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">
                       {cardData.isSelf ? 'Interests & Goals' : 'Interests'}
                     </label>
                     <input 
@@ -1076,33 +1229,27 @@ export default function App() {
                       value={cardData.interests}
                       onChange={e => setCardData({...cardData, interests: e.target.value})}
                       placeholder={cardData.isSelf ? 'e.g. meditation, fitness...' : 'e.g. hiking, coffee...'}
-                      className="w-full bg-white/50 dark:bg-stone-950/50 border-2 border-[#fdfbf7] dark:border-stone-900/30 rounded-2xl p-4 focus:ring-2 focus:ring-stone-200 focus:border-stone-300 transition-all text-base outline-none dark:text-stone-50"
+                      className="w-full glass-input rounded-2xl p-4 text-base outline-none"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">Vibe / Tone</label>
-                    <div className="relative">
-                      <select
-                        value={cardData.vibe}
-                        onChange={(e) => setCardData({ ...cardData, vibe: e.target.value })}
-                        className="w-full bg-white/50 dark:bg-stone-950/50 border-2 border-[#fdfbf7] dark:border-stone-900/30 rounded-2xl p-4 pr-12 focus:ring-2 focus:ring-stone-200 focus:border-stone-300 transition-all text-base outline-none appearance-none font-bold text-stone-700 dark:text-stone-100"
-                      >
-                        {['heartfelt', 'funny', 'poetic', 'minimalist', 'professional'].map(v => (
-                          <option key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>
-                        ))}
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-rose-400">
-                        <ChevronDown className="w-5 h-5" />
-                      </div>
-                    </div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Vibe / Tone</label>
+                    <CustomDropdown
+                      value={cardData.vibe}
+                      onChange={(val) => setCardData({ ...cardData, vibe: val })}
+                      options={['heartfelt', 'funny', 'poetic', 'minimalist', 'professional'].map(v => ({
+                        value: v,
+                        label: v.charAt(0).toUpperCase() + v.slice(1)
+                      }))}
+                    />
                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-10 pt-6 border-t border-stone-100 dark:border-stone-800">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-stone-900 dark:text-stone-100">
-                      <div className="p-2 bg-stone-100 dark:bg-stone-800 rounded-xl">
-                        <ImageIcon className="w-5 h-5 text-[#d4af37]" />
+                    <div className="flex items-center gap-3 text-black dark:text-white">
+                      <div className="p-2 bg-white/50 dark:bg-white/10 rounded-xl">
+                        <ImageIcon className="w-5 h-5 text-indigo-500 dark:text-purple-400" />
                       </div>
                       <h2 className="text-xl serif font-bold">Subject Photo</h2>
                     </div>
@@ -1111,7 +1258,7 @@ export default function App() {
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
                       className={`relative aspect-video rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center gap-2 cursor-pointer group overflow-hidden ${
-                        subjectImage ? 'border-emerald-500 bg-emerald-50' : 'border-emerald-100 bg-emerald-50/30 hover:border-emerald-300 hover:bg-emerald-50/50'
+                        subjectImage ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-emerald-400 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/10 hover:border-emerald-500 dark:hover:border-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
                       }`}
                     >
                       {subjectImage ? (
@@ -1150,9 +1297,9 @@ export default function App() {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-stone-900 dark:text-stone-100">
-                      <div className="p-2 bg-stone-100 dark:bg-stone-800 rounded-xl">
-                        <Type className="w-5 h-5 text-[#d4af37]" />
+                    <div className="flex items-center gap-3 text-black dark:text-white">
+                      <div className="p-2 bg-white/50 dark:bg-white/10 rounded-xl">
+                        <Type className="w-5 h-5 text-indigo-500 dark:text-purple-400" />
                       </div>
                       <h2 className="text-xl serif font-bold">Typography</h2>
                     </div>
@@ -1163,11 +1310,11 @@ export default function App() {
                           onClick={() => setCardData({...cardData, fontPair: f})}
                           className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
                             cardData.fontPair === f 
-                            ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-900/20 shadow-sm' 
-                            : 'border-sky-50 dark:border-sky-900/10 bg-white dark:bg-rose-950/30 hover:border-sky-200 dark:hover:border-sky-800'
+                            ? 'border-sky-500 bg-sky-100 dark:bg-sky-900/30 shadow-sm' 
+                            : 'glass-input text-black dark:text-stone-200 hover:border-sky-300 dark:hover:border-sky-700'
                           }`}
                         >
-                          <div className={`text-sm mb-0.5 ${FONT_PAIRS[f].display} text-stone-900 dark:text-rose-50`}>Happy Birthday</div>
+                          <div className={`text-sm mb-0.5 ${FONT_PAIRS[f].display} text-black dark:text-rose-50`}>Happy Birthday</div>
                           <div className={`text-[10px] text-stone-500 dark:text-rose-300/50 ${FONT_PAIRS[f].body} uppercase tracking-widest`}>{f}</div>
                         </button>
                       ))}
@@ -1179,9 +1326,9 @@ export default function App() {
               <div className="pt-4 border-t border-stone-100 dark:border-stone-800">
                 <button 
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="flex items-center gap-2 text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-all group mx-auto"
+                  className="flex items-center gap-2 text-stone-600 dark:text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-all group mx-auto"
                 >
-                  <Settings2 className={`w-4 h-4 transition-transform duration-500 ${showAdvanced ? 'rotate-180 text-[#d4af37]' : ''}`} />
+                  <Settings2 className={`w-4 h-4 transition-transform duration-500 ${showAdvanced ? 'rotate-180 text-indigo-500 dark:text-purple-400' : ''}`} />
                   <span className="text-[10px] font-bold uppercase tracking-[0.3em]">
                     {showAdvanced ? 'Hide Advanced Studio Settings' : 'Detailed Creative Controls'}
                   </span>
@@ -1200,16 +1347,16 @@ export default function App() {
                     <div className="grid md:grid-cols-2 gap-10 pt-6">
                       {/* Left Column: Visual Style */}
                       <div className="space-y-8">
-                        <div className="flex items-center gap-3 text-stone-900 dark:text-stone-100">
-                          <div className="p-2 bg-stone-100 dark:bg-stone-800 rounded-xl">
-                            <Palette className="w-5 h-5 text-[#d4af37]" />
+                        <div className="flex items-center gap-3 text-black dark:text-white">
+                          <div className="p-2 bg-white/50 dark:bg-white/10 rounded-xl">
+                            <Palette className="w-5 h-5 text-indigo-500 dark:text-purple-400" />
                           </div>
                           <h2 className="text-xl serif font-bold">Visual Style</h2>
                         </div>
                         
                         <div className="space-y-6">
                           <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400 mb-3">Aspect Ratio</label>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-3">Aspect Ratio</label>
                             <div className="grid grid-cols-5 gap-2">
                               {(Object.keys(ASPECT_RATIOS) as Array<keyof typeof ASPECT_RATIOS>).map(ratio => (
                                 <button
@@ -1217,8 +1364,8 @@ export default function App() {
                                   onClick={() => setCardData({...cardData, aspectRatio: ratio})}
                                   className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all ${
                                     cardData.aspectRatio === ratio 
-                                    ? 'bg-[#d4af37] text-white border-[#d4af37] shadow-md' 
-                                    : 'bg-white dark:bg-stone-950/30 text-stone-700 dark:text-stone-200 border-stone-50 dark:border-stone-900/10 hover:border-stone-200 dark:hover:border-stone-800'
+                                    ? 'iridescent-bg text-white border-transparent shadow-md' 
+                                    : 'glass-input text-black dark:text-stone-200 hover:border-stone-200 dark:hover:border-stone-800'
                                   }`}
                                   title={ASPECT_RATIOS[ratio].label}
                                 >
@@ -1230,7 +1377,7 @@ export default function App() {
                           </div>
 
                           <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400 mb-3">Artistic Style</label>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-3">Artistic Style</label>
                             <div className="grid grid-cols-2 gap-2">
                               {(Object.keys(OUTPUT_STYLES) as Array<keyof typeof OUTPUT_STYLES>).map(style => (
                                 <button
@@ -1238,8 +1385,8 @@ export default function App() {
                                   onClick={() => setCardData({...cardData, outputStyle: style})}
                                   className={`p-3 rounded-xl border-2 text-xs font-bold transition-all text-left ${
                                     cardData.outputStyle === style 
-                                    ? 'bg-[#d4af37] text-white border-[#d4af37] shadow-md' 
-                                    : 'bg-white dark:bg-stone-950/30 text-stone-700 dark:text-stone-200 border-stone-50 dark:border-stone-900/10 hover:border-stone-200 dark:hover:border-stone-800'
+                                    ? 'iridescent-bg text-white border-transparent shadow-md' 
+                                    : 'glass-input text-black dark:text-stone-200 hover:border-stone-200 dark:hover:border-stone-800'
                                   }`}
                                 >
                                   {style}
@@ -1249,7 +1396,7 @@ export default function App() {
                           </div>
 
                           <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400 mb-3">Theme & Vibe</label>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-3">Theme & Vibe</label>
                             <div className="grid grid-cols-2 gap-2">
                               {(['classic', 'modern', 'playful', 'elegant'] as const).map(t => (
                                 <button
@@ -1257,8 +1404,8 @@ export default function App() {
                                   onClick={() => setCardData({...cardData, theme: t})}
                                   className={`p-3 rounded-xl border-2 text-xs font-bold capitalize transition-all ${
                                     cardData.theme === t 
-                                    ? 'bg-[#d4af37] text-white border-[#d4af37] shadow-md' 
-                                    : 'bg-white dark:bg-stone-950/30 text-stone-700 dark:text-stone-200 border-stone-50 dark:border-stone-900/10 hover:border-stone-200 dark:hover:border-stone-800'
+                                    ? 'iridescent-bg text-white border-transparent shadow-md' 
+                                    : 'glass-input text-black dark:text-stone-200 hover:border-stone-200 dark:hover:border-stone-800'
                                   }`}
                                 >
                                   {t}
@@ -1271,9 +1418,9 @@ export default function App() {
 
                       {/* Right Column: Other Settings */}
                       <div className="space-y-8">
-                        <div className="flex items-center gap-3 text-stone-900 dark:text-stone-100">
-                          <div className="p-2 bg-stone-100 dark:bg-stone-800 rounded-xl">
-                            <Layout className="w-5 h-5 text-[#d4af37]" />
+                        <div className="flex items-center gap-3 text-black dark:text-white">
+                          <div className="p-2 bg-white/50 dark:bg-white/10 rounded-xl">
+                            <Layout className="w-5 h-5 text-indigo-500 dark:text-purple-400" />
                           </div>
                           <h2 className="text-xl serif font-bold">Output Settings</h2>
                         </div>
@@ -1281,7 +1428,7 @@ export default function App() {
                         <div className="space-y-6">
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-3">
-                              <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">Image Size</label>
+                              <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Image Size</label>
                               <div className="flex gap-1">
                                 {(['1K', '2K', '4K'] as const).map(size => (
                                   <button
@@ -1289,8 +1436,8 @@ export default function App() {
                                     onClick={() => setCardData({...cardData, imageSize: size})}
                                     className={`flex-1 py-2 rounded-lg border-2 text-xs font-bold transition-all ${
                                       cardData.imageSize === size 
-                                      ? 'bg-[#d4af37] text-white border-[#d4af37] shadow-sm' 
-                                      : 'bg-white dark:bg-stone-950/30 text-stone-700 dark:text-stone-200 border-stone-50 dark:border-stone-900/10 hover:border-stone-200 dark:hover:border-stone-800'
+                                      ? 'iridescent-bg text-white border-transparent shadow-sm' 
+                                      : 'glass-input text-black dark:text-stone-200'
                                     }`}
                                   >
                                     {size}
@@ -1299,24 +1446,24 @@ export default function App() {
                               </div>
                             </div>
                             <div className="space-y-3">
-                              <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">Signature</label>
+                              <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Signature</label>
                               <input 
                                 type="text" 
                                 value={cardData.signature}
                                 onChange={e => setCardData({...cardData, signature: e.target.value})}
                                 placeholder="e.g. From Prince"
-                                className="w-full bg-white/50 dark:bg-stone-950/50 border-2 border-stone-50 dark:border-stone-900/30 rounded-xl p-3 text-sm focus:ring-2 focus:ring-stone-200 outline-none dark:text-stone-50"
+                                className="w-full glass-input rounded-xl p-3 text-sm outline-none"
                               />
                             </div>
                           </div>
 
                           <div className="space-y-3">
-                            <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">Custom Image Prompt Additions</label>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Custom Image Prompt Additions</label>
                             <textarea 
                               value={cardData.imagePreferences}
                               onChange={e => setCardData({...cardData, imagePreferences: e.target.value})}
                               placeholder="e.g. include a golden retriever, sunset background, cinematic lighting..."
-                              className="w-full bg-white/50 dark:bg-stone-950/50 border-2 border-stone-50 dark:border-stone-900/30 rounded-2xl p-4 focus:ring-2 focus:ring-stone-200 focus:border-stone-300 transition-all h-24 resize-none text-sm outline-none dark:text-stone-50"
+                              className="w-full glass-input rounded-2xl p-4 h-24 resize-none text-sm outline-none"
                             />
                           </div>
                         </div>
@@ -1330,7 +1477,7 @@ export default function App() {
                 <button
                   disabled={loading || !cardData.recipient}
                   onClick={generateCard}
-                  className="w-full bg-gradient-to-r from-[#d4af37] via-[#2d2a26] dark:via-[#f5f5f5] to-[#d4af37] text-white dark:text-stone-900 rounded-[24px] py-6 flex items-center justify-center gap-4 hover:shadow-2xl hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed group shadow-xl"
+                  className="w-full iridescent-bg rounded-[24px] py-6 flex items-center justify-center gap-4 hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
                 >
                   {loading ? (
                     <div className="flex items-center gap-3">
@@ -1358,9 +1505,9 @@ export default function App() {
               <div className="w-full flex flex-col md:flex-row justify-between items-center gap-6 px-4">
                 <button
                   onClick={() => setStep('form')}
-                  className="group flex items-center gap-3 text-stone-400 dark:text-stone-500 hover:text-[#d4af37] transition-all font-bold uppercase tracking-[0.2em] text-[10px]"
+                  className="group flex items-center gap-3 text-stone-600 dark:text-stone-500 hover:text-indigo-500 dark:hover:text-purple-400 transition-all font-bold uppercase tracking-[0.2em] text-[10px]"
                 >
-                  <div className="p-2 bg-white dark:bg-stone-900 rounded-xl shadow-sm group-hover:shadow-md transition-all border border-stone-200 dark:border-stone-800">
+                  <div className="p-2 glass-panel rounded-xl group-hover:shadow-md transition-all">
                     <ChevronLeft className="w-4 h-4" />
                   </div>
                   Back to Studio
@@ -1369,14 +1516,14 @@ export default function App() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={copyMessage}
-                    className="flex items-center gap-2 px-6 py-3 bg-white/80 dark:bg-stone-900/80 backdrop-blur-md rounded-2xl border border-stone-200 dark:border-stone-800 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all text-stone-600 dark:text-stone-100 font-bold text-xs uppercase tracking-widest"
+                    className="flex items-center gap-2 px-6 py-3 glass-panel rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all text-stone-600 dark:text-stone-100 font-bold text-xs uppercase tracking-widest"
                   >
-                    {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-[#d4af37]" />}
+                    {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-indigo-500 dark:text-purple-400" />}
                     {copied ? 'Copied!' : 'Copy Message'}
                   </button>
                   <button
                     onClick={() => handleDownload()}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#d4af37] to-[#2d2a26] dark:to-[#f5f5f5] rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all text-white dark:text-stone-900 font-bold text-xs uppercase tracking-widest"
+                    className="flex items-center gap-2 px-6 py-3 iridescent-bg rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all text-white font-bold text-xs uppercase tracking-widest"
                   >
                     <Download className="w-4 h-4" />
                     Download Card
@@ -1385,7 +1532,7 @@ export default function App() {
               </div>
 
               {/* Single Result: The Image */}
-              <div className={`relative w-full ${ASPECT_RATIOS[cardData.aspectRatio].class} rounded-[48px] overflow-hidden card-shadow group border-[12px] border-white/80 dark:border-stone-900/80 bg-white dark:bg-stone-950`}>
+              <div className={`relative w-full ${ASPECT_RATIOS[cardData.aspectRatio].class} rounded-[48px] overflow-hidden glass-panel group border-[12px]`}>
                 {cardData.imageUrl ? (
                   <>
                     <img 
@@ -1399,14 +1546,14 @@ export default function App() {
                     <div className="absolute top-8 right-8 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <button
                         onClick={() => handleDownload()}
-                        className="p-4 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md text-[#d4af37] rounded-2xl shadow-2xl hover:scale-110 hover:bg-white dark:hover:bg-stone-800 transition-all group border border-stone-200 dark:border-stone-800"
+                        className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
                         title="Download Card"
                       >
                         <Download className="w-6 h-6 group-hover:animate-bounce transition-transform" />
                       </button>
                       <button
                         onClick={copyMessage}
-                        className="p-4 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md text-[#d4af37] rounded-2xl shadow-2xl hover:scale-110 hover:bg-white dark:hover:bg-stone-800 transition-all group border border-stone-200 dark:border-stone-800"
+                        className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
                         title="Copy Message"
                       >
                         {copied ? <Check className="w-6 h-6 text-emerald-500" /> : <Copy className="w-6 h-6 group-hover:rotate-12 transition-transform" />}
@@ -1415,9 +1562,9 @@ export default function App() {
 
                   </>
                 ) : (
-                  <div className="w-full h-full bg-stone-50 dark:bg-stone-950 flex flex-col items-center justify-center gap-4">
-                    <RefreshCw className="w-12 h-12 text-[#d4af37] animate-spin" />
-                    <p className="text-stone-400 dark:text-stone-600 font-bold uppercase tracking-widest text-xs">Developing your aura...</p>
+                  <div className="w-full h-full bg-transparent flex flex-col items-center justify-center gap-4">
+                    <RefreshCw className="w-12 h-12 text-indigo-500 dark:text-purple-400 animate-spin" />
+                    <p className="text-stone-600 dark:text-stone-400 font-bold uppercase tracking-widest text-xs">Developing your aura...</p>
                   </div>
                 )}
               </div>
@@ -1439,7 +1586,7 @@ export default function App() {
                 <button
                   disabled={loading}
                   onClick={generateCard}
-                  className="bg-white text-stone-700 border-2 border-stone-100 px-12 py-5 rounded-full flex items-center gap-3 hover:bg-stone-50 hover:border-stone-200 transition-all font-bold shadow-sm hover:shadow-md"
+                  className="glass-panel text-stone-700 dark:text-stone-200 px-12 py-5 rounded-full flex items-center gap-3 hover:scale-105 transition-all font-bold shadow-sm hover:shadow-md"
                 >
                   <RefreshCw className={`w-5 h-5 text-sky-500 ${loading ? 'animate-spin' : ''}`} />
                   Try Another Version
@@ -1451,7 +1598,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-16 text-stone-400 text-xs flex items-center gap-6 font-medium">
+      <footer className="mt-16 text-stone-600 dark:text-stone-400 text-xs flex items-center gap-6 font-medium">
         <span>© 2024 AuraCards</span>
         <div className="w-1.5 h-1.5 rounded-full bg-rose-200" />
         <span>Nano Banana Pro Engine</span>
