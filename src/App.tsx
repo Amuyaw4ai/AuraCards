@@ -7,6 +7,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { get, set } from 'idb-keyval';
 import { 
   Sparkles, 
   Heart, 
@@ -57,6 +58,7 @@ interface CardData {
   coupleNames: string;
   achievement: string;
   event: string;
+  examType: string;
   relationship: string;
   vibe: string;
   interests: string;
@@ -106,6 +108,7 @@ const OCCASIONS = {
   'Thank You': { icon: '🙏', label: 'Thank You', field: null, placeholder: '', group: 'Appreciation & Support' },
   'Congratulations': { icon: '🎉', label: 'Congratulations', field: 'achievement', placeholder: 'e.g. New Job', group: 'Appreciation & Support' },
   'Best Wishes': { icon: '✨', label: 'Best Wishes', field: 'event', placeholder: 'e.g. New Job, Moving, Surgery', group: 'Appreciation & Support' },
+  'Exam Wishes': { icon: '📚', label: 'Exam Wishes', field: 'examType', placeholder: 'e.g. Finals, Bar Exam', group: 'Appreciation & Support' },
 };
 
 const ASPECT_RATIOS = {
@@ -122,6 +125,10 @@ const PALETTES = {
   'Rose Gold': { bg: 'bg-[#fffafb]', text: 'text-[#9f1239]', accent: 'text-[#e11d48]', border: 'border-[#fecdd3]' },
   'Emerald & Gold': { bg: 'bg-[#064e3b]', text: 'text-[#fefce8]', accent: 'text-[#ca8a04]', border: 'border-[#065f46]' },
   'Deep Indigo': { bg: 'bg-[#1e1b4b]', text: 'text-[#e0e7ff]', accent: 'text-[#818cf8]', border: 'border-[#3730a3]' },
+  'Midnight & Neon': { bg: 'bg-[#0f172a]', text: 'text-[#f8fafc]', accent: 'text-[#38bdf8]', border: 'border-[#38bdf8]' },
+  'Ocean Breeze': { bg: 'bg-[#f0f9ff]', text: 'text-[#0c4a6e]', accent: 'text-[#0284c7]', border: 'border-[#bae6fd]' },
+  'Monochrome': { bg: 'bg-[#fafafa]', text: 'text-[#171717]', accent: 'text-[#525252]', border: 'border-[#d4d4d4]' },
+  'Sunset Glow': { bg: 'bg-[#fff7ed]', text: 'text-[#7c2d12]', accent: 'text-[#ea580c]', border: 'border-[#fed7aa]' },
 };
 
 const FONT_PAIRS = {
@@ -145,6 +152,10 @@ const OUTPUT_STYLES = {
   'Artistic Cartoon': "vibrant artistic cartoon, stylized, bold colors, expressive, high quality illustration",
   'Oil Painting': "classic oil painting, visible brushstrokes, rich textures, museum quality, masterpiece, Renaissance style",
   'Cyberpunk Neon': "cyberpunk aesthetic, neon lights, futuristic, high contrast, detailed digital art, synthwave colors",
+  'Vector Art': "clean vector art, flat design, bold colors, minimalist, geometric shapes, modern illustration",
+  'Watercolor': "soft watercolor painting, bleeding colors, paper texture, delicate brushstrokes, artistic, ethereal",
+  'Digital Art': "high quality digital painting, concept art, detailed, atmospheric lighting, professional illustration",
+  'Anime/Manga': "anime style, manga illustration, cel shaded, expressive characters, vibrant colors, dynamic composition",
 };
 
 const TEMPLATES = [
@@ -293,6 +304,70 @@ const TEMPLATES = [
     }
   },
   {
+    id: 'anniversary-modern',
+    name: 'Modern Love',
+    image: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&q=80&w=800',
+    description: 'Sleek and contemporary anniversary celebration.',
+    settings: {
+      occasion: 'Anniversary' as const,
+      isSelf: false,
+      theme: 'modern' as const,
+      outputStyle: 'Vector Art' as const,
+      palette: 'Midnight & Neon' as const,
+      vibe: 'fun',
+      interests: 'city life, cocktails, modern art',
+      imagePreferences: 'Minimalist, vibrant accents, clean lines'
+    }
+  },
+  {
+    id: 'new-baby-joy',
+    name: 'Bundle of Joy',
+    image: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&q=80&w=800',
+    description: 'Bright and cheerful baby announcement.',
+    settings: {
+      occasion: 'New Baby' as const,
+      isSelf: false,
+      theme: 'playful' as const,
+      outputStyle: '3D Render' as const,
+      palette: 'Ocean Breeze' as const,
+      vibe: 'fun',
+      interests: 'toys, balloons, sunshine',
+      imagePreferences: 'Bright, cheerful, soft 3D lighting'
+    }
+  },
+  {
+    id: 'exam-wishes-focus',
+    name: 'Laser Focus',
+    image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=800',
+    description: 'Encouraging and focused for upcoming exams.',
+    settings: {
+      occasion: 'Exam Wishes' as const,
+      isSelf: false,
+      theme: 'modern' as const,
+      outputStyle: 'Digital Art' as const,
+      palette: 'Monochrome' as const,
+      vibe: 'inspirational',
+      interests: 'books, coffee, success',
+      imagePreferences: 'Clean desk, warm light, motivational'
+    }
+  },
+  {
+    id: 'exam-wishes-luck',
+    name: 'Good Luck Charm',
+    image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800',
+    description: 'A cheerful boost of luck for test day.',
+    settings: {
+      occasion: 'Exam Wishes' as const,
+      isSelf: false,
+      theme: 'playful' as const,
+      outputStyle: 'Anime/Manga' as const,
+      palette: 'Sunset Glow' as const,
+      vibe: 'fun',
+      interests: 'stars, clovers, victory',
+      imagePreferences: 'Bright, energetic, supportive'
+    }
+  },
+  {
     id: 'valentines-dream',
     name: 'Valentine Dream',
     image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=800',
@@ -416,14 +491,14 @@ function CustomDropdown({ value, options, onChange }: { value: string, options: 
           >
             <div className="max-h-60 overflow-y-auto py-2 custom-scrollbar">
               {hasGroups && groupedOptions ? (
-                Object.entries(groupedOptions).map(([group, groupOptions]) => (
-                  <div key={group}>
+                Object.entries(groupedOptions).map(([group, groupOptions], idx) => (
+                  <div key={`${group}-${idx}`}>
                     <div className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 bg-stone-50/50 dark:bg-stone-800/50 sticky top-0 backdrop-blur-sm z-10">
                       {group}
                     </div>
-                    {groupOptions.map((option) => (
+                    {groupOptions.map((option, idx) => (
                       <button
-                        key={option.value}
+                        key={`${option.value}-${idx}`}
                         type="button"
                         onClick={() => {
                           onChange(option.value);
@@ -443,9 +518,9 @@ function CustomDropdown({ value, options, onChange }: { value: string, options: 
                   </div>
                 ))
               ) : (
-                options.map((option) => (
+                options.map((option, idx) => (
                   <button
-                    key={option.value}
+                    key={`${option.value}-${idx}`}
                     type="button"
                     onClick={() => {
                       onChange(option.value);
@@ -568,24 +643,9 @@ export default function App() {
     return () => clearInterval(interval);
   }, [loading]);
   const [hasKey, setHasKey] = useState<boolean | null>(null);
-  const [history, setHistory] = useState<HistoryItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('aura_history');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      console.warn("LocalStorage access failed:", e);
-      return [];
-    }
-  });
-  const [library, setLibrary] = useState<SavedItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('aura_library');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      console.warn("LocalStorage access failed:", e);
-      return [];
-    }
-  });
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [library, setLibrary] = useState<SavedItem[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -603,6 +663,34 @@ export default function App() {
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const toggleTemplates = () => {
+    setShowTemplates(!showTemplates);
+    setShowLibrary(false);
+    setShowHistory(false);
+    setShowThemeMenu(false);
+  };
+
+  const toggleLibrary = () => {
+    setShowLibrary(!showLibrary);
+    setShowTemplates(false);
+    setShowHistory(false);
+    setShowThemeMenu(false);
+  };
+
+  const toggleHistory = () => {
+    setShowHistory(!showHistory);
+    setShowTemplates(false);
+    setShowLibrary(false);
+    setShowThemeMenu(false);
+  };
+
+  const toggleThemeMenu = () => {
+    setShowThemeMenu(!showThemeMenu);
+    setShowTemplates(false);
+    setShowLibrary(false);
+    setShowHistory(false);
+  };
 
   // Theme effect
   useEffect(() => {
@@ -630,6 +718,7 @@ export default function App() {
     coupleNames: '',
     achievement: '',
     event: '',
+    examType: '',
     relationship: '',
     vibe: 'heartfelt',
     interests: '',
@@ -652,48 +741,32 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const saveToLocalStorage = (data: HistoryItem[]) => {
+    const loadData = async () => {
       try {
-        localStorage.setItem('aura_history', JSON.stringify(data));
+        const savedHistory = await get('aura_history');
+        if (savedHistory) setHistory(savedHistory);
+        const savedLibrary = await get('aura_library');
+        if (savedLibrary) setLibrary(savedLibrary);
       } catch (e) {
-        if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-          console.warn("LocalStorage quota exceeded, reducing history size...");
-          if (data.length > 1) {
-            // Remove the oldest item and try again
-            saveToLocalStorage(data.slice(0, -1));
-          } else {
-            // If even one item is too large, clear it
-            localStorage.removeItem('aura_history');
-          }
-        } else {
-          console.error("LocalStorage save failed:", e);
-        }
+        console.error("Failed to load from IndexedDB:", e);
+      } finally {
+        setIsLoaded(true);
       }
     };
-
-    saveToLocalStorage(history);
-  }, [history]);
+    loadData();
+  }, []);
 
   useEffect(() => {
-    const saveLibraryToLocalStorage = (data: SavedItem[]) => {
-      try {
-        localStorage.setItem('aura_library', JSON.stringify(data));
-      } catch (e) {
-        if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-          console.warn("LocalStorage quota exceeded, reducing library size...");
-          if (data.length > 1) {
-            saveLibraryToLocalStorage(data.slice(0, -1));
-          } else {
-            localStorage.removeItem('aura_library');
-          }
-        } else {
-          console.error("LocalStorage save failed:", e);
-        }
-      }
-    };
+    if (isLoaded) {
+      set('aura_history', history).catch(e => console.error("Failed to save history:", e));
+    }
+  }, [history, isLoaded]);
 
-    saveLibraryToLocalStorage(library);
-  }, [library]);
+  useEffect(() => {
+    if (isLoaded) {
+      set('aura_library', library).catch(e => console.error("Failed to save library:", e));
+    }
+  }, [library, isLoaded]);
 
   const removeFromHistory = (id: string) => {
     setHistory(prev => prev.filter(item => item.id !== id));
@@ -916,6 +989,13 @@ export default function App() {
     // Clear previous image to show loading state if regenerating
     setCardData(prev => ({ ...prev, imageUrl: '' }));
     
+    const withTimeout = (promise: Promise<any>, ms: number) => {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+      ]);
+    };
+
     const withRetry = async (fn: () => Promise<any>, maxRetries = 5, initialDelay = 3000) => {
       let retries = 0;
       while (retries < maxRetries) {
@@ -955,6 +1035,7 @@ export default function App() {
       const coupleStr = cardData.coupleNames ? `for ${cardData.coupleNames}` : '';
       const achievementStr = cardData.achievement ? `for ${cardData.achievement}` : '';
       const eventStr = cardData.event ? `for ${cardData.event}` : '';
+      const examStr = cardData.examType ? `for their ${cardData.examType}` : '';
       
       const relationshipStr = cardData.isSelf ? 'myself' : (cardData.relationship ? `my ${cardData.relationship}` : 'someone special');
       const interestsStr = cardData.interests ? `They love ${cardData.interests}.` : '';
@@ -974,15 +1055,16 @@ export default function App() {
       else if (occasion === 'Wedding') contextInfo = coupleStr;
       else if (occasion === 'Congratulations') contextInfo = achievementStr;
       else if (occasion === 'Best Wishes') contextInfo = eventStr;
+      else if (occasion === 'Exam Wishes') contextInfo = examStr;
 
       const perspectiveInstruction = cardData.isSelf 
         ? "Write this as a self-affirmation or personal celebration message from a first-person perspective (using 'I', 'me', 'my'). It should be empowering and reflective." 
         : `Write this as a message for ${relationshipStr}, ${recipientStr}.`;
 
-      const messageResponse = await withRetry(() => ai.models.generateContent({
+      const messageResponse = await withRetry(() => withTimeout(ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: `Create a short, ${vibeDescription} ${occasion} message. ${perspectiveInstruction} ${contextInfo} ${interestsStr} Keep it under 50 words. Do not use placeholders or square brackets.`,
-      }));
+      }), 30000));
       
       const message = messageResponse.text || `Happy ${occasion}!`;
 
@@ -1019,6 +1101,8 @@ export default function App() {
         imagePrompt = `A high-quality, professional Thank You card illustration for ${recipientStr}. Style: ${styleDesc} and ${outputStyleDesc}. ${interestsStr} ${userPrefs} The image should be warm, appreciative, and sincere. Please include the text "Thank You!" artistically integrated into the design.${signatureStr}`;
       } else if (occasion === 'Congratulations') {
         imagePrompt = `A high-quality, professional Congratulations card illustration for ${recipientStr}. ${achievementStr}. Style: ${styleDesc} and ${outputStyleDesc}. ${interestsStr} ${userPrefs} The image should be celebratory, proud, and exciting. Please include the text "Congratulations!" artistically integrated into the design.${signatureStr}`;
+      } else if (occasion === 'Exam Wishes') {
+        imagePrompt = `A high-quality, professional Exam Wishes card illustration for ${recipientStr}. ${examStr}. Style: ${styleDesc} and ${outputStyleDesc}. ${interestsStr} ${userPrefs} The image should be encouraging, focused, and supportive. Please include the text "Good Luck!" artistically integrated into the design.${signatureStr}`;
       }
 
       if (subjectImage) {
@@ -1043,7 +1127,7 @@ export default function App() {
         });
       }
 
-      const imageResponse = await withRetry(() => ai.models.generateContent({
+      const imageResponse = await withRetry(() => withTimeout(ai.models.generateContent({
         model: "gemini-3.1-flash-image-preview",
         contents: contents,
         config: {
@@ -1052,7 +1136,7 @@ export default function App() {
             imageSize: cardData.imageSize
           }
         }
-      }));
+      }), 60000));
 
       let imageUrl = "";
       for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
@@ -1081,8 +1165,8 @@ export default function App() {
       if (error.message?.includes("Requested entity was not found")) {
         setHasKey(false);
         setErrorMessage("Please ensure you have selected a valid API key for Nano Banana Pro.");
-      } else if (error.message?.includes("high demand") || error.code === 503) {
-        setErrorMessage("The AI model is currently very busy. Please wait a moment and try again.");
+      } else if (error.message?.includes("high demand") || error.code === 503 || error.message?.includes("Timeout")) {
+        setErrorMessage("The AI model is currently very busy or taking too long. Please wait a moment and try again.");
       } else {
         setErrorMessage("Something went wrong while generating your masterpiece. Please try again.");
       }
@@ -1155,9 +1239,9 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 gap-8">
-                {TEMPLATES.map((template) => (
+                {TEMPLATES.map((template, idx) => (
                   <div 
-                    key={template.id} 
+                    key={`${template.id}-${idx}`} 
                     className="group glass-panel rounded-[32px] overflow-hidden hover:shadow-xl transition-all cursor-pointer"
                     onClick={() => {
                       setCardData({ 
@@ -1252,11 +1336,11 @@ export default function App() {
               ) : (
                 <div className="space-y-2">
                   <AnimatePresence>
-                    {history.map((item) => {
+                    {history.map((item, idx) => {
                       const isActive = cardData.recipient === item.data.recipient && cardData.message === item.data.message;
                       return (
                         <motion.div 
-                          key={item.id}
+                          key={`${item.id}-${idx}`}
                           layout
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -1352,7 +1436,7 @@ export default function App() {
               </div>
 
               <div className="flex-1 overflow-y-auto pb-8">
-                {library.length === 0 && TEMPLATES.length === 0 ? (
+                {library.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center space-y-4 border-2 border-dashed border-stone-200 dark:border-stone-800 rounded-3xl p-8">
                     <div className="p-4 bg-stone-50 dark:bg-stone-800/50 rounded-full">
                       <BookmarkPlus className="w-8 h-8 text-stone-300 dark:text-stone-600" />
@@ -1363,9 +1447,9 @@ export default function App() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <AnimatePresence>
                       {/* Render Saved Items */}
-                      {library.filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))).map((item) => (
+                      {library.filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))).map((item, idx) => (
                         <motion.div 
-                          key={item.id}
+                          key={`${item.id}-${idx}`}
                           layout
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
@@ -1417,54 +1501,6 @@ export default function App() {
                                   {tag}
                                 </span>
                               ))}
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-
-                      {/* Render Templates */}
-                      {TEMPLATES.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase())).map((template) => (
-                        <motion.div 
-                          key={template.id}
-                          layout
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          className="group relative bg-white dark:bg-stone-800/50 border border-stone-100 dark:border-stone-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-                          onClick={() => {
-                            setCardData({ 
-                              ...cardData, 
-                              ...template.settings,
-                              imageUrl: '',
-                              message: ''
-                            });
-                            setShowLibrary(false);
-                          }}
-                        >
-                          <div className="aspect-[4/3] relative overflow-hidden">
-                            <img 
-                              src={template.image} 
-                              alt={template.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                              referrerPolicy="no-referrer"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                            <div className="absolute top-3 right-3">
-                              <span className="px-2.5 py-1 bg-indigo-500/90 backdrop-blur-md text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
-                                Template
-                              </span>
-                            </div>
-                          </div>
-                          <div className="p-5">
-                            <h3 className="font-bold text-stone-900 dark:text-stone-100 mb-1 truncate">{template.name}</h3>
-                            <p className="text-xs text-stone-500 dark:text-stone-400 line-clamp-2 mb-4">{template.description}</p>
-                            <div className="flex flex-wrap gap-2">
-                              <span className="px-2.5 py-1 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-full text-[10px] font-black uppercase tracking-widest">
-                                {template.settings.theme}
-                              </span>
-                              <span className="px-2.5 py-1 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-full text-[10px] font-black uppercase tracking-widest">
-                                {template.settings.outputStyle.split(' ')[0]}
-                              </span>
                             </div>
                           </div>
                         </motion.div>
@@ -1650,7 +1686,7 @@ export default function App() {
                   { num: 2, label: 'Details' },
                   { num: 3, label: 'Style' }
                 ].map((s, i) => (
-                  <div key={s.num} className="flex items-center flex-1 last:flex-none">
+                  <div key={`${s.num}-${i}`} className="flex items-center flex-1 last:flex-none">
                     <div className="flex flex-col items-center gap-2">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 ${formStep >= s.num ? 'iridescent-bg text-white shadow-lg scale-110' : 'bg-stone-200 dark:bg-stone-800 text-stone-500'}`}>
                         {s.num}
@@ -1684,17 +1720,17 @@ export default function App() {
                         acc[group].push({ key: occ, ...OCCASIONS[occ] });
                         return acc;
                       }, {} as Record<string, any[]>)
-                    ).map(([group, items]) => (
-                      <div key={group} className="space-y-3">
+                    ).map(([group, items], idx) => (
+                      <div key={`${group}-${idx}`} className="space-y-3">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 ml-1">
                           {group}
                         </h3>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                          {items.map((item) => {
+                          {items.map((item, idx) => {
                             const isSelected = cardData.occasion === item.key;
                             return (
                               <button
-                                key={item.key}
+                                key={`${item.key}-${idx}`}
                                 type="button"
                                 onClick={() => setCardData({ ...cardData, occasion: item.key as keyof typeof OCCASIONS })}
                                 className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-200 border-2 ${
@@ -1719,9 +1755,9 @@ export default function App() {
                   <div className="pt-8">
                      <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-4">Or start with a curated Aura</label>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       {TEMPLATES.map(t => (
+                       {TEMPLATES.map((t, idx) => (
                          <button
-                           key={t.name}
+                           key={`${t.name}-${idx}`}
                            onClick={() => applyTemplate(t)}
                            className="text-left p-4 rounded-2xl border-2 border-transparent hover:border-indigo-500/30 glass-input transition-all group"
                          >
@@ -1930,9 +1966,9 @@ export default function App() {
                     <div className="space-y-4">
                       <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Typography</label>
                       <div className="grid gap-2">
-                        {(Object.keys(FONT_PAIRS) as Array<keyof typeof FONT_PAIRS>).map(f => (
+                        {(Object.keys(FONT_PAIRS) as Array<keyof typeof FONT_PAIRS>).map((f, idx) => (
                           <button
-                            key={f}
+                            key={`${f}-${idx}`}
                             onClick={() => setCardData({...cardData, fontPair: f})}
                             className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
                               cardData.fontPair === f 
@@ -1976,9 +2012,9 @@ export default function App() {
                               <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-3">Aspect Ratio</label>
                                 <div className="grid grid-cols-5 gap-2">
-                                  {(Object.keys(ASPECT_RATIOS) as Array<keyof typeof ASPECT_RATIOS>).map(ratio => (
+                                  {(Object.keys(ASPECT_RATIOS) as Array<keyof typeof ASPECT_RATIOS>).map((ratio, idx) => (
                                     <button
-                                      key={ratio}
+                                      key={`${ratio}-${idx}`}
                                       onClick={() => setCardData({...cardData, aspectRatio: ratio})}
                                       className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all ${
                                         cardData.aspectRatio === ratio 
@@ -1997,9 +2033,9 @@ export default function App() {
                               <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-3">Artistic Style</label>
                                 <div className="grid grid-cols-2 gap-2">
-                                  {(Object.keys(OUTPUT_STYLES) as Array<keyof typeof OUTPUT_STYLES>).map(style => (
+                                  {(Object.keys(OUTPUT_STYLES) as Array<keyof typeof OUTPUT_STYLES>).map((style, idx) => (
                                     <button
-                                      key={style}
+                                      key={`${style}-${idx}`}
                                       onClick={() => setCardData({...cardData, outputStyle: style})}
                                       className={`p-3 rounded-xl border-2 text-xs font-bold transition-all text-left ${
                                         cardData.outputStyle === style 
@@ -2016,9 +2052,9 @@ export default function App() {
                               <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-3">Theme & Vibe</label>
                                 <div className="grid grid-cols-2 gap-2">
-                                  {(['classic', 'modern', 'playful', 'elegant'] as const).map(t => (
+                                  {(['classic', 'modern', 'playful', 'elegant'] as const).map((t, idx) => (
                                     <button
-                                      key={t}
+                                      key={`${t}-${idx}`}
                                       onClick={() => setCardData({...cardData, theme: t})}
                                       className={`p-3 rounded-xl border-2 text-xs font-bold capitalize transition-all ${
                                         cardData.theme === t 
@@ -2041,9 +2077,9 @@ export default function App() {
                                 <div className="space-y-3">
                                   <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Image Size</label>
                                   <div className="flex gap-1">
-                                    {(['1K', '2K', '4K'] as const).map(size => (
+                                    {(['1K', '2K', '4K'] as const).map((size, idx) => (
                                       <button
-                                        key={size}
+                                        key={`${size}-${idx}`}
                                         onClick={() => setCardData({...cardData, imageSize: size})}
                                         className={`flex-1 py-2 rounded-lg border-2 text-xs font-bold transition-all ${
                                           cardData.imageSize === size 
