@@ -43,13 +43,16 @@ import {
   Share2,
   BookMarked,
   Search,
-  BookmarkPlus
+  BookmarkPlus,
+  Home,
+  Menu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // --- Types ---
 interface CardData {
   occasion: keyof typeof OCCASIONS;
+  customOccasion: string;
   recipient: string;
   age: string;
   yearsTogether: string;
@@ -59,6 +62,9 @@ interface CardData {
   achievement: string;
   event: string;
   examType: string;
+  loss: string;
+  illness: string;
+  reason: string;
   relationship: string;
   vibe: string;
   interests: string;
@@ -95,20 +101,24 @@ interface SavedItem {
 }
 
 const OCCASIONS = {
-  'Birthday': { icon: '🎂', label: 'Birthday', field: 'age', placeholder: 'e.g. 25', group: 'Milestones' },
-  'Anniversary': { icon: '💍', label: 'Anniversary', field: 'yearsTogether', placeholder: 'e.g. 5 years', group: 'Milestones' },
-  'Graduation': { icon: '🎓', label: 'Graduation', field: 'degree', placeholder: 'e.g. Computer Science', group: 'Milestones' },
-  'Wedding': { icon: '🥂', label: 'Wedding', field: 'coupleNames', placeholder: 'e.g. Mark & Jane', group: 'Milestones' },
-  'New Baby': { icon: '👶', label: 'New Baby', field: 'babyName', placeholder: 'e.g. Oliver', group: 'Milestones' },
-  'Valentine\'s': { icon: '❤️', label: 'Valentine\'s', field: null, placeholder: '', group: 'Love & Romance' },
-  'I Love You': { icon: '💌', label: 'I Love You', field: null, placeholder: '', group: 'Love & Romance' },
-  'Mother\'s Day': { icon: '🌸', label: 'Mother\'s Day', field: null, placeholder: '', group: 'Holidays' },
-  'Father\'s Day': { icon: '👔', label: 'Father\'s Day', field: null, placeholder: '', group: 'Holidays' },
-  'Christmas': { icon: '🎄', label: 'Christmas', field: null, placeholder: '', group: 'Holidays' },
-  'Thank You': { icon: '🙏', label: 'Thank You', field: null, placeholder: '', group: 'Appreciation & Support' },
-  'Congratulations': { icon: '🎉', label: 'Congratulations', field: 'achievement', placeholder: 'e.g. New Job', group: 'Appreciation & Support' },
-  'Best Wishes': { icon: '✨', label: 'Best Wishes', field: 'event', placeholder: 'e.g. New Job, Moving, Surgery', group: 'Appreciation & Support' },
-  'Exam Wishes': { icon: '📚', label: 'Exam Wishes', field: 'examType', placeholder: 'e.g. Finals, Bar Exam', group: 'Appreciation & Support' },
+  'Birthday': { icon: '🎂', label: 'Birthday', field: 'age', fieldLabel: 'Age', placeholder: 'e.g. 25', interestsLabel: 'Interests', interestsPlaceholder: 'e.g. hiking, coffee...', group: 'Milestones' },
+  'Anniversary': { icon: '💍', label: 'Anniversary', field: 'yearsTogether', fieldLabel: 'Years Together', placeholder: 'e.g. 5 years', interestsLabel: 'Shared Interests', interestsPlaceholder: 'e.g. travel, fine dining...', group: 'Milestones' },
+  'Graduation': { icon: '🎓', label: 'Graduation', field: 'degree', fieldLabel: 'Degree', placeholder: 'e.g. Computer Science', interestsLabel: 'Future Goals', interestsPlaceholder: 'e.g. software engineering, travel...', group: 'Milestones' },
+  'Wedding': { icon: '🥂', label: 'Wedding', field: 'coupleNames', fieldLabel: 'Couple Names', placeholder: 'e.g. Mark & Jane', interestsLabel: 'Couple\'s Vibe', interestsPlaceholder: 'e.g. romantic, adventurous...', group: 'Milestones' },
+  'New Baby': { icon: '👶', label: 'New Baby', field: 'babyName', fieldLabel: 'Baby Name', placeholder: 'e.g. Oliver', interestsLabel: 'Nursery Theme/Vibe', interestsPlaceholder: 'e.g. animals, space, pastel...', group: 'Milestones' },
+  'Valentine\'s': { icon: '❤️', label: 'Valentine\'s', field: null, fieldLabel: null, placeholder: '', interestsLabel: 'Romantic Interests', interestsPlaceholder: 'e.g. roses, poetry, stargazing...', group: 'Love & Romance' },
+  'I Love You': { icon: '💌', label: 'I Love You', field: null, fieldLabel: null, placeholder: '', interestsLabel: 'Shared Memories', interestsPlaceholder: 'e.g. our first date, cozy nights...', group: 'Love & Romance' },
+  'Mother\'s Day': { icon: '🌸', label: 'Mother\'s Day', field: null, fieldLabel: null, placeholder: '', interestsLabel: 'Mom\'s Favorites', interestsPlaceholder: 'e.g. gardening, reading, spa...', group: 'Holidays' },
+  'Father\'s Day': { icon: '👔', label: 'Father\'s Day', field: null, fieldLabel: null, placeholder: '', interestsLabel: 'Dad\'s Hobbies', interestsPlaceholder: 'e.g. golf, grilling, cars...', group: 'Holidays' },
+  'Christmas': { icon: '🎄', label: 'Christmas', field: null, fieldLabel: null, placeholder: '', interestsLabel: 'Festive Favorites', interestsPlaceholder: 'e.g. snow, hot cocoa, ornaments...', group: 'Holidays' },
+  'Thank You': { icon: '🙏', label: 'Thank You', field: null, fieldLabel: null, placeholder: '', interestsLabel: 'Reason for Thanks', interestsPlaceholder: 'e.g. helping me move, great advice...', group: 'Appreciation & Support' },
+  'Congratulations': { icon: '🎉', label: 'Congratulations', field: 'achievement', fieldLabel: 'Achievement', placeholder: 'e.g. New Job', interestsLabel: 'Related Interests', interestsPlaceholder: 'e.g. career growth, celebration...', group: 'Appreciation & Support' },
+  'Best Wishes': { icon: '✨', label: 'Best Wishes', field: 'event', fieldLabel: 'Event', placeholder: 'e.g. Moving, Surgery', interestsLabel: 'Focus/Hopes', interestsPlaceholder: 'e.g. fresh start, quick recovery...', group: 'Appreciation & Support' },
+  'Exam Wishes': { icon: '📚', label: 'Exam Wishes', field: 'examType', fieldLabel: 'Exam Type', placeholder: 'e.g. Finals, Bar Exam', interestsLabel: 'Study Focus/Subject', interestsPlaceholder: 'e.g. law, medicine, math...', group: 'Appreciation & Support' },
+  'Condolences': { icon: '🕊️', label: 'Condolences', field: 'loss', fieldLabel: 'Loss', placeholder: 'e.g. Loss of a loved one', interestsLabel: 'Fond Memories', interestsPlaceholder: 'e.g. their smile, their kindness...', group: 'Sympathy & Support' },
+  'Get Well Soon': { icon: '🩹', label: 'Get Well Soon', field: 'illness', fieldLabel: 'Illness/Condition', placeholder: 'e.g. Surgery recovery', interestsLabel: 'Things They Miss', interestsPlaceholder: 'e.g. playing tennis, eating out...', group: 'Sympathy & Support' },
+  'Sympathy': { icon: '🤍', label: 'Sympathy', field: 'reason', fieldLabel: 'Reason', placeholder: 'e.g. Hard times', interestsLabel: 'Comforting Thoughts', interestsPlaceholder: 'e.g. peace, strength, love...', group: 'Sympathy & Support' },
+  'Custom': { icon: '✨', label: 'Custom Occasion', field: 'customOccasion', fieldLabel: 'What is the occasion?', placeholder: 'e.g. First day of school, Promotion...', interestsLabel: 'What makes it special?', interestsPlaceholder: 'e.g. They worked so hard for this...', group: 'Other' }
 };
 
 const ASPECT_RATIOS = {
@@ -619,6 +629,7 @@ const BackgroundOrbs = () => {
 export default function App() {
   const [view, setView] = useState<'form' | 'preview'>('form');
   const [formStep, setFormStep] = useState(1);
+  const [openOccasionGroup, setOpenOccasionGroup] = useState<string>('Milestones');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Gathering aura...');
@@ -661,14 +672,24 @@ export default function App() {
     return localStorage.getItem('aura-app-theme') || 'minimalist';
   });
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [showMainMenu, setShowMainMenu] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const toggleMainMenu = () => {
+    setShowMainMenu(!showMainMenu);
+    setShowTemplates(false);
+    setShowLibrary(false);
+    setShowHistory(false);
+    setShowThemeMenu(false);
+  };
 
   const toggleTemplates = () => {
     setShowTemplates(!showTemplates);
     setShowLibrary(false);
     setShowHistory(false);
     setShowThemeMenu(false);
+    setShowMainMenu(false);
   };
 
   const toggleLibrary = () => {
@@ -676,6 +697,7 @@ export default function App() {
     setShowTemplates(false);
     setShowHistory(false);
     setShowThemeMenu(false);
+    setShowMainMenu(false);
   };
 
   const toggleHistory = () => {
@@ -683,6 +705,7 @@ export default function App() {
     setShowTemplates(false);
     setShowLibrary(false);
     setShowThemeMenu(false);
+    setShowMainMenu(false);
   };
 
   const toggleThemeMenu = () => {
@@ -690,6 +713,7 @@ export default function App() {
     setShowTemplates(false);
     setShowLibrary(false);
     setShowHistory(false);
+    setShowMainMenu(false);
   };
 
   // Theme effect
@@ -710,6 +734,7 @@ export default function App() {
   
   const [cardData, setCardData] = useState<CardData>({
     occasion: 'Birthday',
+    customOccasion: '',
     recipient: '',
     age: '',
     yearsTogether: '',
@@ -719,6 +744,9 @@ export default function App() {
     achievement: '',
     event: '',
     examType: '',
+    loss: '',
+    illness: '',
+    reason: '',
     relationship: '',
     vibe: 'heartfelt',
     interests: '',
@@ -907,6 +935,20 @@ export default function App() {
     setTimeout(() => setSavedToLibrary(false), 2000);
   };
 
+  const saveHistoryToLibrary = (item: HistoryItem) => {
+    if (!item.data.imageUrl) return;
+    const newItem: SavedItem = {
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
+      title: `${item.data.theme} ${item.data.occasion}`,
+      description: `A ${item.data.vibe} card for ${item.data.recipient}`,
+      tags: [item.data.theme, item.data.occasion.toLowerCase(), item.data.outputStyle.split(' ')[0].toLowerCase()],
+      createdAt: Date.now(),
+      data: { ...item.data },
+      subjectImage: item.subjectImage
+    };
+    setLibrary(prev => [newItem, ...prev]);
+  };
+
   const restoreFromHistory = (item: HistoryItem) => {
     setCardData(item.data);
     setSubjectImage(item.subjectImage);
@@ -1027,7 +1069,7 @@ export default function App() {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
       // Build context strings
-      const occasion = cardData.occasion;
+      const occasion = cardData.occasion === 'Custom' ? (cardData.customOccasion || 'Special Occasion') : cardData.occasion;
       const ageStr = cardData.age ? `turning ${cardData.age}` : '';
       const yearsStr = cardData.yearsTogether ? `celebrating ${cardData.yearsTogether}` : '';
       const degreeStr = cardData.degree ? `graduating with a degree in ${cardData.degree}` : '';
@@ -1036,6 +1078,9 @@ export default function App() {
       const achievementStr = cardData.achievement ? `for ${cardData.achievement}` : '';
       const eventStr = cardData.event ? `for ${cardData.event}` : '';
       const examStr = cardData.examType ? `for their ${cardData.examType}` : '';
+      const lossStr = cardData.loss ? `regarding the loss of ${cardData.loss}` : '';
+      const illnessStr = cardData.illness ? `recovering from ${cardData.illness}` : '';
+      const reasonStr = cardData.reason ? `for ${cardData.reason}` : '';
       
       const relationshipStr = cardData.isSelf ? 'myself' : (cardData.relationship ? `my ${cardData.relationship}` : 'someone special');
       const interestsStr = cardData.interests ? `They love ${cardData.interests}.` : '';
@@ -1056,6 +1101,9 @@ export default function App() {
       else if (occasion === 'Congratulations') contextInfo = achievementStr;
       else if (occasion === 'Best Wishes') contextInfo = eventStr;
       else if (occasion === 'Exam Wishes') contextInfo = examStr;
+      else if (occasion === 'Condolences') contextInfo = lossStr;
+      else if (occasion === 'Get Well Soon') contextInfo = illnessStr;
+      else if (occasion === 'Sympathy') contextInfo = reasonStr;
 
       const perspectiveInstruction = cardData.isSelf 
         ? "Write this as a self-affirmation or personal celebration message from a first-person perspective (using 'I', 'me', 'my'). It should be empowering and reflective." 
@@ -1064,14 +1112,14 @@ export default function App() {
       const messageResponse = await withRetry(() => withTimeout(ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: `Create a short, ${vibeDescription} ${occasion} message. ${perspectiveInstruction} ${contextInfo} ${interestsStr} Keep it under 50 words. Do not use placeholders or square brackets.`,
-      }), 30000));
+      }), 60000));
       
       const message = messageResponse.text || `Happy ${occasion}!`;
 
       // 2. Generate Image with Nano Banana Pro
       const styleDesc = THEME_STYLES[cardData.theme];
       const outputStyleDesc = OUTPUT_STYLES[cardData.outputStyle];
-      const userPrefs = cardData.imagePreferences ? `Include: ${cardData.imagePreferences}.` : '';
+      const userPrefs = cardData.imagePreferences ? `CRITICAL VISUAL INSTRUCTIONS FROM USER: The user explicitly requested the following elements to be in the image: "${cardData.imagePreferences}". You MUST include these specific features, objects, or actions exactly as described.` : '';
       
       let imagePrompt = `A high-quality, professional ${occasion} card illustration for ${recipientStr}. ${contextInfo} Style: ${styleDesc} and ${outputStyleDesc}. ${interestsStr} ${userPrefs} The image should be beautiful and celebratory for the occasion of ${occasion}. Please include the text "Happy ${occasion} ${recipientStr}!" artistically integrated into the design.${signatureStr}`;
       
@@ -1103,6 +1151,12 @@ export default function App() {
         imagePrompt = `A high-quality, professional Congratulations card illustration for ${recipientStr}. ${achievementStr}. Style: ${styleDesc} and ${outputStyleDesc}. ${interestsStr} ${userPrefs} The image should be celebratory, proud, and exciting. Please include the text "Congratulations!" artistically integrated into the design.${signatureStr}`;
       } else if (occasion === 'Exam Wishes') {
         imagePrompt = `A high-quality, professional Exam Wishes card illustration for ${recipientStr}. ${examStr}. Style: ${styleDesc} and ${outputStyleDesc}. ${interestsStr} ${userPrefs} The image should be encouraging, focused, and supportive. Please include the text "Good Luck!" artistically integrated into the design.${signatureStr}`;
+      } else if (occasion === 'Condolences') {
+        imagePrompt = `A high-quality, professional Condolences card illustration for ${recipientStr}. ${lossStr}. Style: ${styleDesc} and ${outputStyleDesc}. ${interestsStr} ${userPrefs} The image should be peaceful, comforting, and respectful. Please include the text "With Deepest Sympathy" artistically integrated into the design.${signatureStr}`;
+      } else if (occasion === 'Get Well Soon') {
+        imagePrompt = `A high-quality, professional Get Well Soon card illustration for ${recipientStr}. ${illnessStr}. Style: ${styleDesc} and ${outputStyleDesc}. ${interestsStr} ${userPrefs} The image should be uplifting, bright, and encouraging. Please include the text "Get Well Soon!" artistically integrated into the design.${signatureStr}`;
+      } else if (occasion === 'Sympathy') {
+        imagePrompt = `A high-quality, professional Sympathy card illustration for ${recipientStr}. ${reasonStr}. Style: ${styleDesc} and ${outputStyleDesc}. ${interestsStr} ${userPrefs} The image should be warm, supportive, and gentle. Please include the text "Thinking of You" artistically integrated into the design.${signatureStr}`;
       }
 
       if (subjectImage) {
@@ -1136,7 +1190,7 @@ export default function App() {
             imageSize: cardData.imageSize
           }
         }
-      }), 60000));
+      }), 300000));
 
       let imageUrl = "";
       for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
@@ -1205,24 +1259,17 @@ export default function App() {
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center p-4 md:p-8" onPaste={handlePaste}>
       <BackgroundOrbs />
-      {/* History Sidebar */}
+      {/* Templates View */}
       <AnimatePresence>
         {showTemplates && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowTemplates(false)}
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-            />
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-xl glass-panel z-50 p-8 overflow-y-auto"
-            >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[110] p-6 md:p-12 overflow-y-auto"
+          >
+            <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-[#fff1f2] dark:bg-rose-900/50 rounded-xl">
@@ -1232,13 +1279,14 @@ export default function App() {
                 </div>
                 <button 
                   onClick={() => setShowTemplates(false)}
-                  className="p-2 hover:bg-stone-100 dark:hover:bg-rose-900/50 rounded-full transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-700 dark:text-stone-300 font-medium"
                 >
-                  <X className="w-6 h-6 text-stone-600 dark:text-rose-300/50" />
+                  <Home className="w-4 h-4" />
+                  <span className="hidden sm:inline">Back to Home</span>
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {TEMPLATES.map((template, idx) => (
                   <div 
                     key={`${template.id}-${idx}`} 
@@ -1251,6 +1299,7 @@ export default function App() {
                         message: ''
                       });
                       setShowTemplates(false);
+                      setFormStep(2);
                     }}
                   >
                     <div className="aspect-[16/9] relative overflow-hidden">
@@ -1291,39 +1340,43 @@ export default function App() {
                   </div>
                 ))}
               </div>
-            </motion.div>
-          </>
+            </div>
+          </motion.div>
         )}
 
         {showHistory && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowHistory(false)}
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-            />
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-sm bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-l border-stone-200/50 dark:border-stone-800/50 z-50 p-6 overflow-y-auto shadow-2xl"
-            >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[110] p-6 md:p-12 overflow-y-auto"
+          >
+            <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-rose-100/50 dark:bg-rose-900/30 rounded-xl">
-                    <History className="w-5 h-5 text-rose-500 dark:text-rose-400" />
+                    <History className="w-6 h-6 text-rose-500 dark:text-rose-400" />
                   </div>
-                  <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">Session History</h2>
+                  <h2 className="text-2xl font-bold text-stone-900 dark:text-stone-100">Session History</h2>
                 </div>
-                <button 
-                  onClick={() => setShowHistory(false)}
-                  className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-stone-500 dark:text-stone-400" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {history.length > 0 && (
+                    <button
+                      onClick={() => setHistory([])}
+                      className="px-4 py-2 text-sm font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-full transition-colors"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setShowHistory(false)}
+                    className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-700 dark:text-stone-300 font-medium"
+                  >
+                    <Home className="w-4 h-4" />
+                    <span className="hidden sm:inline">Back to Home</span>
+                  </button>
+                </div>
               </div>
 
               {history.length === 0 ? (
@@ -1334,7 +1387,7 @@ export default function App() {
                   <p className="text-stone-500 dark:text-stone-400 text-sm font-medium">Your past sessions will appear here.<br/>Start your first reading!</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <AnimatePresence>
                     {history.map((item, idx) => {
                       const isActive = cardData.recipient === item.data.recipient && cardData.message === item.data.message;
@@ -1345,28 +1398,44 @@ export default function App() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
-                          className={`group relative rounded-2xl p-4 cursor-pointer transition-all ${isActive ? 'bg-rose-50 dark:bg-rose-900/20 border border-rose-200/50 dark:border-rose-800/50' : 'hover:bg-stone-50 dark:hover:bg-stone-800/50 border border-transparent'}`}
+                          className={`group relative rounded-3xl p-6 cursor-pointer transition-all shadow-sm hover:shadow-xl hover:-translate-y-1 ${isActive ? 'bg-rose-50 dark:bg-rose-900/20 border border-rose-200/50 dark:border-rose-800/50' : 'bg-white dark:bg-stone-800/50 hover:bg-stone-50 dark:hover:bg-stone-800 border border-stone-100 dark:border-stone-800'}`}
                           onClick={() => restoreFromHistory(item)}
                         >
                           <div className="flex justify-between items-start gap-4">
                             <div className="flex-1 min-w-0">
-                              <p className={`font-medium truncate ${isActive ? 'text-rose-700 dark:text-rose-300 font-bold' : 'text-stone-600 dark:text-stone-300 group-hover:text-stone-900 dark:group-hover:text-stone-100'}`}>
+                              <p className={`font-bold text-lg truncate mb-2 ${isActive ? 'text-rose-700 dark:text-rose-300' : 'text-stone-900 dark:text-stone-100'}`}>
                                 {item.title || `For ${item.data.recipient}`}
                               </p>
-                              <p className="text-[10px] font-mono text-stone-400 dark:text-stone-500 mt-1 flex items-center gap-1">
+                              <p className="text-xs text-stone-500 dark:text-stone-400 line-clamp-2 mb-4">
+                                {item.data.message || 'No message generated yet.'}
+                              </p>
+                              <p className="text-[10px] font-mono text-stone-400 dark:text-stone-500 flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
                                 {new Date(item.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                               </p>
                             </div>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeFromHistory(item.id);
-                              }}
-                              className="opacity-0 group-hover:opacity-100 p-1.5 text-stone-400 hover:text-rose-500 dark:hover:text-rose-400 transition-all rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/30"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  saveHistoryToLibrary(item);
+                                }}
+                                className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 hover:scale-110 transition-transform rounded-xl"
+                                title="Save to Library"
+                              >
+                                <BookmarkPlus className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeFromHistory(item.id);
+                                }}
+                                className="p-2 bg-rose-50 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400 hover:scale-110 transition-transform rounded-xl"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </motion.div>
                       );
@@ -1374,30 +1443,23 @@ export default function App() {
                   </AnimatePresence>
                 </div>
               )}
-            </motion.div>
-          </>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* Library Modal */}
       <AnimatePresence>
         {showLibrary && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowLibrary(false)}
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-            />
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 bottom-0 w-full max-w-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-stone-200/50 dark:border-stone-800/50 z-50 p-6 md:p-8 overflow-y-auto shadow-2xl flex flex-col"
-            >
-              <div className="flex items-center justify-between mb-6 shrink-0">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[110] p-6 md:p-12 overflow-y-auto"
+          >
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between mb-8 shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-indigo-100/50 dark:bg-indigo-900/30 rounded-xl">
                     <BookMarked className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />
@@ -1408,16 +1470,17 @@ export default function App() {
                   {library.length > 0 && (
                     <button
                       onClick={clearLibrary}
-                      className="px-3 py-1.5 text-sm font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
+                      className="px-4 py-2 text-sm font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-full transition-colors"
                     >
                       Clear All
                     </button>
                   )}
                   <button 
                     onClick={() => setShowLibrary(false)}
-                    className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-700 dark:text-stone-300 font-medium"
                   >
-                    <X className="w-6 h-6 text-stone-500 dark:text-stone-400" />
+                    <Home className="w-4 h-4" />
+                    <span className="hidden sm:inline">Back to Home</span>
                   </button>
                 </div>
               </div>
@@ -1444,7 +1507,7 @@ export default function App() {
                     <p className="text-stone-500 dark:text-stone-400 font-medium">Your library is empty.<br/>Save a card to see it here!</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <AnimatePresence>
                       {/* Render Saved Items */}
                       {library.filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))).map((item, idx) => (
@@ -1454,7 +1517,13 @@ export default function App() {
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.95 }}
-                          className="group relative bg-white dark:bg-stone-800/50 border border-stone-100 dark:border-stone-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                          className="group relative bg-white dark:bg-stone-800/50 border border-stone-100 dark:border-stone-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                          onClick={() => {
+                            setCardData(item.data);
+                            setSubjectImage(item.subjectImage);
+                            setView('preview');
+                            setShowLibrary(false);
+                          }}
                         >
                           <div className="aspect-[4/3] relative overflow-hidden bg-stone-100 dark:bg-stone-900">
                             {item.data.imageUrl ? (
@@ -1469,17 +1538,6 @@ export default function App() {
                               </div>
                             )}
                             <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCardData(item.data);
-                                  setShowLibrary(false);
-                                }}
-                                className="p-2 bg-white/90 dark:bg-stone-900/90 backdrop-blur-md rounded-xl text-indigo-600 dark:text-indigo-400 hover:scale-110 transition-transform shadow-sm"
-                                title="Load Card"
-                              >
-                                <Maximize2 className="w-4 h-4" />
-                              </button>
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1509,36 +1567,64 @@ export default function App() {
                   </div>
                 )}
               </div>
-            </motion.div>
-          </>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* Top Navigation */}
       <header className="absolute top-4 left-4 right-4 md:top-8 md:left-8 md:right-8 z-[100] flex justify-between items-center pointer-events-none">
-        {/* Left: Library */}
-        <div className="pointer-events-auto flex items-center gap-3">
-          <button
-            onClick={() => setShowTemplates(!showTemplates)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-stone-200/50 dark:border-stone-800/50 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all shadow-sm hover:shadow-md"
+        {/* Left: Main Menu */}
+        <div className="flex items-center gap-3 pointer-events-auto relative">
+           <button
+            onClick={toggleMainMenu}
+            className="p-2.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-stone-200/50 dark:border-stone-800/50 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all shadow-sm hover:shadow-md"
+            title="Menu"
           >
-            <Layout className="w-4 h-4 text-rose-500 dark:text-rose-400" />
-            Templates
+            <Menu className="w-5 h-5" />
           </button>
-          <button
-            onClick={() => setShowLibrary(!showLibrary)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-stone-200/50 dark:border-stone-800/50 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all shadow-sm hover:shadow-md"
-          >
-            <BookMarked className="w-4 h-4 text-indigo-500 dark:text-purple-400" />
-            Library
-          </button>
+          
+          <AnimatePresence>
+            {showMainMenu && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="absolute left-0 top-full mt-3 w-56 bg-white dark:bg-stone-900 rounded-2xl overflow-hidden shadow-xl border border-stone-200 dark:border-stone-800 z-50 p-2"
+              >
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={toggleTemplates}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
+                  >
+                    <Layout className="w-4 h-4 text-rose-500 dark:text-rose-400" />
+                    Templates
+                  </button>
+                  <button
+                    onClick={toggleLibrary}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
+                  >
+                    <BookMarked className="w-4 h-4 text-indigo-500 dark:text-purple-400" />
+                    Library
+                  </button>
+                  <button
+                    onClick={toggleHistory}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
+                  >
+                    <History className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                    History
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Right: Theme & History */}
+        {/* Right: Theme */}
         <div className="flex items-center gap-3 pointer-events-auto">
           <div className="relative">
             <button
-              onClick={() => setShowThemeMenu(!showThemeMenu)}
+              onClick={toggleThemeMenu}
               className="p-2.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-stone-200/50 dark:border-stone-800/50 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all shadow-sm hover:shadow-md"
               title="Workspace Theme"
             >
@@ -1593,13 +1679,6 @@ export default function App() {
             title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
           >
             {isDarkMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-indigo-500" />}
-          </button>
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-stone-200/50 dark:border-stone-800/50 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all shadow-sm hover:shadow-md"
-          >
-            <History className="w-4 h-4 text-rose-500 dark:text-rose-400" />
-            History
           </button>
         </div>
       </header>
@@ -1712,7 +1791,7 @@ export default function App() {
                     </div>
                     <h2 className="text-2xl serif font-bold">What are we celebrating?</h2>
                   </div>
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {Object.entries(
                       (Object.keys(OCCASIONS) as Array<keyof typeof OCCASIONS>).reduce((acc, occ) => {
                         const group = OCCASIONS[occ].group || 'Other';
@@ -1720,55 +1799,60 @@ export default function App() {
                         acc[group].push({ key: occ, ...OCCASIONS[occ] });
                         return acc;
                       }, {} as Record<string, any[]>)
-                    ).map(([group, items], idx) => (
-                      <div key={`${group}-${idx}`} className="space-y-3">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 ml-1">
-                          {group}
-                        </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                          {items.map((item, idx) => {
-                            const isSelected = cardData.occasion === item.key;
-                            return (
-                              <button
-                                key={`${item.key}-${idx}`}
-                                type="button"
-                                onClick={() => setCardData({ ...cardData, occasion: item.key as keyof typeof OCCASIONS })}
-                                className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-200 border-2 ${
-                                  isSelected 
-                                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 shadow-md scale-[1.02]' 
-                                    : 'border-transparent bg-white/60 dark:bg-stone-800/60 hover:bg-white dark:hover:bg-stone-800 hover:shadow-sm hover:scale-[1.02]'
-                                }`}
+                    ).map(([group, items], idx) => {
+                      const isOpen = openOccasionGroup === group;
+                      return (
+                        <div key={`${group}-${idx}`} className="bg-white/40 dark:bg-stone-800/40 rounded-3xl overflow-hidden border border-stone-200 dark:border-stone-700 transition-all">
+                          <button
+                            type="button"
+                            onClick={() => setOpenOccasionGroup(isOpen ? '' : group)}
+                            className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/50 dark:hover:bg-stone-800/60 transition-colors"
+                          >
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-stone-700 dark:text-stone-300">
+                              {group}
+                            </h3>
+                            <ChevronDown className={`w-5 h-5 text-stone-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          
+                          <AnimatePresence initial={false}>
+                            {isOpen && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
                               >
-                                <span className="text-3xl mb-2">{item.icon}</span>
-                                <span className={`text-sm font-medium text-center ${isSelected ? 'text-indigo-700 dark:text-indigo-300 font-bold' : 'text-stone-700 dark:text-stone-300'}`}>
-                                  {item.label}
-                                </span>
-                              </button>
-                            );
-                          })}
+                                <div className="p-4 pt-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                  {items.map((item, idx) => {
+                                    const isSelected = cardData.occasion === item.key;
+                                    return (
+                                      <button
+                                        key={`${item.key}-${idx}`}
+                                        type="button"
+                                        onClick={() => {
+                                          setCardData({ ...cardData, occasion: item.key as keyof typeof OCCASIONS });
+                                          setFormStep(2);
+                                        }}
+                                        className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-200 border-2 ${
+                                          isSelected 
+                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 shadow-md scale-[1.02]' 
+                                            : 'border-transparent bg-white/60 dark:bg-stone-800/60 hover:bg-white dark:hover:bg-stone-800 hover:shadow-sm hover:scale-[1.02]'
+                                        }`}
+                                      >
+                                        <span className="text-3xl mb-2">{item.icon}</span>
+                                        <span className={`text-sm font-medium text-center ${isSelected ? 'text-indigo-700 dark:text-indigo-300 font-bold' : 'text-stone-700 dark:text-stone-300'}`}>
+                                          {item.label}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Templates Quick Select */}
-                  <div className="pt-8">
-                     <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-4">Or start with a curated Aura</label>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       {TEMPLATES.map((t, idx) => (
-                         <button
-                           key={`${t.name}-${idx}`}
-                           onClick={() => applyTemplate(t)}
-                           className="text-left p-4 rounded-2xl border-2 border-transparent hover:border-indigo-500/30 glass-input transition-all group"
-                         >
-                           <div className="flex items-center justify-between mb-2">
-                             <span className="font-bold text-sm text-black dark:text-white">{t.name}</span>
-                             <span className="text-xs text-indigo-500 dark:text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity">Apply →</span>
-                           </div>
-                           <p className="text-xs text-stone-500 dark:text-stone-400">{t.description}</p>
-                         </button>
-                       ))}
-                     </div>
+                      );
+                    })}
                   </div>
                 </motion.div>
               )}
@@ -1818,12 +1902,7 @@ export default function App() {
                     {OCCASIONS[cardData.occasion].field && (
                       <div className="space-y-2">
                         <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">
-                          {OCCASIONS[cardData.occasion].label === 'Anniversary' ? 'Years' : 
-                           OCCASIONS[cardData.occasion].label === 'Graduation' ? 'Degree' :
-                           OCCASIONS[cardData.occasion].label === 'Wedding' ? 'Couple' :
-                           OCCASIONS[cardData.occasion].label === 'New Baby' ? 'Baby Name' : 
-                           OCCASIONS[cardData.occasion].label === 'Congratulations' ? 'Achievement' : 
-                           OCCASIONS[cardData.occasion].label === 'Best Wishes' ? 'Event' : 'Age'}
+                          {OCCASIONS[cardData.occasion].fieldLabel}
                         </label>
                         <input 
                           type="text" 
@@ -1850,13 +1929,13 @@ export default function App() {
 
                     <div className="space-y-2">
                       <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">
-                        {cardData.isSelf ? 'Interests & Goals' : 'Interests'}
+                        {cardData.isSelf ? 'Interests & Goals' : OCCASIONS[cardData.occasion].interestsLabel}
                       </label>
                       <input 
                         type="text"
                         value={cardData.interests}
                         onChange={e => setCardData({...cardData, interests: e.target.value})}
-                        placeholder={cardData.isSelf ? 'e.g. meditation, fitness...' : 'e.g. hiking, coffee...'}
+                        placeholder={cardData.isSelf ? 'e.g. meditation, fitness...' : OCCASIONS[cardData.occasion].interestsPlaceholder}
                         className="w-full glass-input rounded-2xl p-4 text-base outline-none"
                       />
                     </div>
@@ -1951,16 +2030,28 @@ export default function App() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-2">
-                      <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Vibe / Tone</label>
-                      <CustomDropdown
-                        value={cardData.vibe}
-                        onChange={(val) => setCardData({ ...cardData, vibe: val })}
-                        options={['heartfelt', 'funny', 'poetic', 'minimalist', 'professional'].map(v => ({
-                          value: v,
-                          label: v.charAt(0).toUpperCase() + v.slice(1)
-                        }))}
-                      />
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Vibe / Tone</label>
+                        <CustomDropdown
+                          value={cardData.vibe}
+                          onChange={(val) => setCardData({ ...cardData, vibe: val })}
+                          options={['heartfelt', 'funny', 'poetic', 'minimalist', 'professional'].map(v => ({
+                            value: v,
+                            label: v.charAt(0).toUpperCase() + v.slice(1)
+                          }))}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Specific Visuals / Features</label>
+                        <textarea 
+                          value={cardData.imagePreferences}
+                          onChange={e => setCardData({...cardData, imagePreferences: e.target.value})}
+                          placeholder="e.g. subject standing by a car, wearing formal clothes, sunset background..."
+                          className="w-full glass-input rounded-2xl p-4 h-32 resize-none text-sm outline-none"
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-4">
@@ -2102,16 +2193,6 @@ export default function App() {
                                     className="w-full glass-input rounded-xl p-3 text-sm outline-none"
                                   />
                                 </div>
-                              </div>
-
-                              <div className="space-y-3">
-                                <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Custom Image Prompt Additions</label>
-                                <textarea 
-                                  value={cardData.imagePreferences}
-                                  onChange={e => setCardData({...cardData, imagePreferences: e.target.value})}
-                                  placeholder="e.g. include a golden retriever, sunset background, cinematic lighting..."
-                                  className="w-full glass-input rounded-2xl p-4 h-24 resize-none text-sm outline-none"
-                                />
                               </div>
                             </div>
                           </div>
