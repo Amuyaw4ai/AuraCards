@@ -748,7 +748,7 @@ export default function App() {
     illness: '',
     reason: '',
     relationship: '',
-    vibe: 'heartfelt',
+    vibe: 'inspirational',
     interests: '',
     imagePreferences: '',
     message: '',
@@ -1267,7 +1267,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[110] p-6 md:p-12 overflow-y-auto"
+            className="fixed inset-0 w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[110] p-6 pt-24 md:p-12 md:pt-28 overflow-y-auto"
           >
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-8">
@@ -1350,7 +1350,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[110] p-6 md:p-12 overflow-y-auto"
+            className="fixed inset-0 w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[110] p-6 pt-24 md:p-12 md:pt-28 overflow-y-auto"
           >
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-8">
@@ -1456,7 +1456,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[110] p-6 md:p-12 overflow-y-auto"
+            className="fixed inset-0 w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[110] p-6 pt-24 md:p-12 md:pt-28 overflow-y-auto"
           >
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-8 shrink-0">
@@ -1573,7 +1573,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Top Navigation */}
-      <header className="absolute top-4 left-4 right-4 md:top-8 md:left-8 md:right-8 z-[100] flex justify-between items-center pointer-events-none">
+      <header className="fixed top-4 left-4 right-4 md:top-8 md:left-8 md:right-8 z-[120] flex justify-between items-center pointer-events-none">
         {/* Left: Main Menu */}
         <div className="flex items-center gap-3 pointer-events-auto relative">
            <button
@@ -2036,7 +2036,7 @@ export default function App() {
                         <CustomDropdown
                           value={cardData.vibe}
                           onChange={(val) => setCardData({ ...cardData, vibe: val })}
-                          options={['heartfelt', 'funny', 'poetic', 'minimalist', 'professional'].map(v => ({
+                          options={['inspirational', 'funny', 'poetic', 'professional', 'formal', 'romantic'].map(v => ({
                             value: v,
                             label: v.charAt(0).toUpperCase() + v.slice(1)
                           }))}
