@@ -45,9 +45,15 @@ import {
   Search,
   BookmarkPlus,
   Home,
-  Menu
+  Menu,
+  Plus,
+  ArrowRight,
+  Wand2,
+  Gift,
+  MessageSquareHeart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { getPreWrittenMessages } from './preWrittenMessages';
 
 // --- Types ---
 interface CardData {
@@ -70,6 +76,7 @@ interface CardData {
   interests: string;
   imagePreferences: string;
   message: string;
+  preWrittenMessage: string;
   imageUrl: string;
   theme: 'classic' | 'modern' | 'playful' | 'elegant';
   palette: keyof typeof PALETTES;
@@ -148,6 +155,7 @@ const FONT_PAIRS = {
   'Elegant Baskerville': { display: 'font-baskerville', body: 'font-serif' },
 };
 
+
 const THEME_STYLES = {
   classic: "timeless, oil painting style, ornate details, rich textures",
   modern: "minimalist, vector art, flat design, clean lines, geometric",
@@ -174,12 +182,14 @@ const TEMPLATES = [
     name: 'Self-Affirmation Zen',
     image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=800',
     description: 'Perfect for personal growth and LinkedIn posters.',
+    sampleMessage: 'I am capable of achieving greatness.',
     settings: {
       occasion: 'Birthday' as const,
       isSelf: true,
       theme: 'elegant' as const,
       outputStyle: 'Photorealistic' as const,
       palette: 'Champagne Gold' as const,
+      fontPair: 'Elegant Baskerville' as const,
       vibe: 'inspirational',
       interests: 'meditation, growth, success',
       imagePreferences: 'Golden hour lighting, serene atmosphere, professional look'
@@ -190,12 +200,14 @@ const TEMPLATES = [
     name: 'Career Architect',
     image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800',
     description: 'Sleek, professional look for LinkedIn career updates.',
+    sampleMessage: 'Cheers to new beginnings and endless possibilities.',
     settings: {
       occasion: 'Graduation' as const,
       isSelf: true,
       theme: 'modern' as const,
       outputStyle: 'Photorealistic' as const,
       palette: 'Onyx & Gold' as const,
+      fontPair: 'Modern Sans' as const,
       vibe: 'professional',
       interests: 'leadership, innovation, strategy',
       imagePreferences: 'Modern office background, sharp focus, corporate aesthetic'
@@ -206,12 +218,14 @@ const TEMPLATES = [
     name: 'Midnight Cyber',
     image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800',
     description: 'High-energy neon vibes for tech lovers.',
+    sampleMessage: 'Level up! Happy Birthday.',
     settings: {
       occasion: 'Birthday' as const,
       isSelf: false,
       theme: 'modern' as const,
       outputStyle: 'Cyberpunk Neon' as const,
       palette: 'Onyx & Gold' as const,
+      fontPair: 'Modern Sans' as const,
       vibe: 'energetic',
       interests: 'gaming, coding, future',
       imagePreferences: 'Neon accents, holographic elements, sharp focus'
@@ -222,12 +236,14 @@ const TEMPLATES = [
     name: 'Ghibli Whimsy',
     image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=800',
     description: 'Soft, hand-painted romantic aesthetic.',
+    sampleMessage: 'You are my greatest adventure.',
     settings: {
       occasion: 'I Love You' as const,
       isSelf: false,
       theme: 'playful' as const,
       outputStyle: 'Studio Ghibli' as const,
       palette: 'Rose Gold' as const,
+      fontPair: 'Playful Script' as const,
       vibe: 'heartfelt',
       interests: 'nature, cozy afternoons, tea',
       imagePreferences: 'Lush greenery, soft sunlight, hand-painted feel'
@@ -238,12 +254,14 @@ const TEMPLATES = [
     name: 'Golden Wishes',
     image: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&q=80&w=800',
     description: 'A bright, uplifting card for any upcoming event or new journey.',
+    sampleMessage: 'Wishing you all the success in the world.',
     settings: {
       occasion: 'Best Wishes' as const,
       isSelf: false,
       theme: 'elegant' as const,
       outputStyle: 'Photorealistic' as const,
       palette: 'Champagne Gold' as const,
+      fontPair: 'Classic Serif' as const,
       vibe: 'uplifting',
       interests: 'new beginnings, success, happiness',
       imagePreferences: 'Bright, airy, golden hour lighting, subtle sparkles or bokeh'
@@ -254,12 +272,14 @@ const TEMPLATES = [
     name: 'Pixar Pride',
     image: 'https://images.unsplash.com/photo-1535223289827-42f1e9919769?auto=format&fit=crop&q=80&w=800',
     description: 'Clean, 3D rendered celebratory look.',
+    sampleMessage: 'So incredibly proud of you!',
     settings: {
       occasion: 'Graduation' as const,
       isSelf: false,
       theme: 'modern' as const,
       outputStyle: '3D Render' as const,
       palette: 'Deep Indigo' as const,
+      fontPair: 'Modern Sans' as const,
       vibe: 'proud',
       interests: 'achievement, future, books',
       imagePreferences: 'Cinematic lighting, smooth surfaces, vibrant colors'
@@ -270,12 +290,14 @@ const TEMPLATES = [
     name: 'Eternal Wedding',
     image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800',
     description: 'Elegant and timeless wedding celebration.',
+    sampleMessage: 'To a lifetime of love and happiness.',
     settings: {
       occasion: 'Wedding' as const,
       isSelf: false,
       theme: 'elegant' as const,
       outputStyle: 'Photorealistic' as const,
       palette: 'Champagne Gold' as const,
+      fontPair: 'Elegant Baskerville' as const,
       vibe: 'romantic',
       interests: 'love, flowers, celebration',
       imagePreferences: 'Soft focus, floral arrangements, elegant lighting'
@@ -286,12 +308,14 @@ const TEMPLATES = [
     name: 'Baby Dream',
     image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=800',
     description: 'Soft and playful for the newest family member.',
+    sampleMessage: 'Welcome to the world, little one.',
     settings: {
       occasion: 'New Baby' as const,
       isSelf: false,
       theme: 'playful' as const,
       outputStyle: 'Artistic Cartoon' as const,
       palette: 'Deep Indigo' as const,
+      fontPair: 'Playful Script' as const,
       vibe: 'cheerful',
       interests: 'toys, lullabies, clouds',
       imagePreferences: 'Pastel colors, soft textures, cute elements'
@@ -302,12 +326,14 @@ const TEMPLATES = [
     name: 'Golden Anniversary',
     image: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=800',
     description: 'Rich and intimate for milestone anniversaries.',
+    sampleMessage: 'Happy Anniversary to my everything.',
     settings: {
       occasion: 'Anniversary' as const,
       isSelf: false,
       theme: 'classic' as const,
       outputStyle: 'Oil Painting' as const,
       palette: 'Emerald & Gold' as const,
+      fontPair: 'Classic Serif' as const,
       vibe: 'heartfelt',
       interests: 'memories, travel, fine dining',
       imagePreferences: 'Rich textures, warm candlelight, museum quality'
@@ -318,12 +344,14 @@ const TEMPLATES = [
     name: 'Modern Love',
     image: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&q=80&w=800',
     description: 'Sleek and contemporary anniversary celebration.',
+    sampleMessage: 'Another year of us.',
     settings: {
       occasion: 'Anniversary' as const,
       isSelf: false,
       theme: 'modern' as const,
       outputStyle: 'Vector Art' as const,
       palette: 'Midnight & Neon' as const,
+      fontPair: 'Modern Sans' as const,
       vibe: 'fun',
       interests: 'city life, cocktails, modern art',
       imagePreferences: 'Minimalist, vibrant accents, clean lines'
@@ -334,12 +362,14 @@ const TEMPLATES = [
     name: 'Bundle of Joy',
     image: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&q=80&w=800',
     description: 'Bright and cheerful baby announcement.',
+    sampleMessage: 'So much joy in one tiny package.',
     settings: {
       occasion: 'New Baby' as const,
       isSelf: false,
       theme: 'playful' as const,
       outputStyle: '3D Render' as const,
       palette: 'Ocean Breeze' as const,
+      fontPair: 'Playful Script' as const,
       vibe: 'fun',
       interests: 'toys, balloons, sunshine',
       imagePreferences: 'Bright, cheerful, soft 3D lighting'
@@ -350,12 +380,14 @@ const TEMPLATES = [
     name: 'Laser Focus',
     image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=800',
     description: 'Encouraging and focused for upcoming exams.',
+    sampleMessage: 'You\'ve got this. Good luck!',
     settings: {
       occasion: 'Exam Wishes' as const,
       isSelf: false,
       theme: 'modern' as const,
       outputStyle: 'Digital Art' as const,
       palette: 'Monochrome' as const,
+      fontPair: 'Modern Sans' as const,
       vibe: 'inspirational',
       interests: 'books, coffee, success',
       imagePreferences: 'Clean desk, warm light, motivational'
@@ -366,12 +398,14 @@ const TEMPLATES = [
     name: 'Good Luck Charm',
     image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800',
     description: 'A cheerful boost of luck for test day.',
+    sampleMessage: 'Sending you all the good vibes!',
     settings: {
       occasion: 'Exam Wishes' as const,
       isSelf: false,
       theme: 'playful' as const,
       outputStyle: 'Anime/Manga' as const,
       palette: 'Sunset Glow' as const,
+      fontPair: 'Playful Script' as const,
       vibe: 'fun',
       interests: 'stars, clovers, victory',
       imagePreferences: 'Bright, energetic, supportive'
@@ -382,12 +416,14 @@ const TEMPLATES = [
     name: 'Valentine Dream',
     image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=800',
     description: 'Deep reds and artistic flair for Valentine\'s Day.',
+    sampleMessage: 'Be mine, today and always.',
     settings: {
       occasion: 'Valentine\'s' as const,
       isSelf: false,
       theme: 'elegant' as const,
       outputStyle: 'Photorealistic' as const,
       palette: 'Rose Gold' as const,
+      fontPair: 'Elegant Baskerville' as const,
       vibe: 'romantic',
       interests: 'roses, chocolate, candlelit dinners',
       imagePreferences: 'Deep red tones, soft bokeh, romantic atmosphere'
@@ -398,12 +434,14 @@ const TEMPLATES = [
     name: 'Gothic Romance',
     image: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?auto=format&fit=crop&q=80&w=800',
     description: 'Dark, moody, and deeply emotional aesthetic.',
+    sampleMessage: 'My soul loves yours.',
     settings: {
       occasion: 'I Love You' as const,
       isSelf: false,
       theme: 'classic' as const,
       outputStyle: 'Oil Painting' as const,
       palette: 'Onyx & Gold' as const,
+      fontPair: 'Classic Serif' as const,
       vibe: 'soulful',
       interests: 'poetry, old books, starlight',
       imagePreferences: 'Moody lighting, dramatic shadows, Victorian aesthetic'
@@ -414,31 +452,17 @@ const TEMPLATES = [
     name: 'Minimalist Zen',
     image: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&q=80&w=800',
     description: 'Ultra-clean and modern for personal clarity.',
+    sampleMessage: 'Finding peace in the present moment.',
     settings: {
       occasion: 'Birthday' as const,
       isSelf: true,
       theme: 'modern' as const,
       outputStyle: 'Photorealistic' as const,
       palette: 'Champagne Gold' as const,
+      fontPair: 'Modern Sans' as const,
       vibe: 'peaceful',
       interests: 'simplicity, focus, nature',
       imagePreferences: 'Minimalist composition, soft natural light, clean space'
-    }
-  },
-  {
-    id: 'retro-pop',
-    name: 'Retro Pop',
-    image: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=800',
-    description: 'Vibrant 80s style for high-energy celebrations.',
-    settings: {
-      occasion: 'Birthday' as const,
-      isSelf: false,
-      theme: 'playful' as const,
-      outputStyle: 'Artistic Cartoon' as const,
-      palette: 'Deep Indigo' as const,
-      vibe: 'energetic',
-      interests: 'music, dancing, parties',
-      imagePreferences: 'Vibrant colors, geometric patterns, retro aesthetic'
     }
   }
 ];
@@ -626,8 +650,186 @@ const BackgroundOrbs = () => {
   );
 };
 
+const HomePage = ({
+  setView,
+  setCardData,
+  history,
+  library,
+  setShowTemplates,
+  setShowLibrary,
+  setShowHistory,
+  setFormStep
+}: {
+  setView: (v: 'home' | 'form' | 'preview') => void;
+  setCardData: (d: any) => void;
+  history: any[];
+  library: any[];
+  setShowTemplates: (v: boolean) => void;
+  setShowLibrary: (v: boolean) => void;
+  setShowHistory: (v: boolean) => void;
+  setFormStep: (step: number) => void;
+}) => {
+  const handleStart = (preset?: any) => {
+    if (preset) {
+      setCardData((prev: any) => ({ ...prev, ...preset }));
+      setFormStep(2);
+    } else {
+      setFormStep(1);
+    }
+    setView('form');
+  };
+
+  return (
+    <div className="w-full min-h-screen pt-24 pb-12 px-4 md:px-8 flex flex-col items-center gap-16">
+      {/* Header */}
+      <div className="text-center space-y-6 max-w-3xl mx-auto">
+        <h1 className="text-5xl md:text-7xl font-black text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
+          Create breathtaking, <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500">AI-crafted cards</span>
+        </h1>
+        <p className="text-xl text-stone-600 dark:text-stone-400">Turn your feelings into beautiful art in seconds.</p>
+        <button onClick={() => handleStart()} className="mt-8 px-10 py-5 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-full text-lg font-bold shadow-2xl hover:scale-105 transition-all flex items-center gap-3 mx-auto">
+          <Sparkles className="w-6 h-6" />
+          Start Creating
+        </button>
+      </div>
+
+      {/* Dashboard (Only show if there's history or library) */}
+      {(history.length > 0 || library.length > 0) && (
+        <div className="w-full max-w-5xl space-y-8">
+          {/* Two Sided Panes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Pane: Recent Activity */}
+            <div className="glass-panel p-6 rounded-3xl space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold flex items-center gap-2 text-stone-800 dark:text-stone-200"><History className="w-5 h-5 text-rose-500" /> Recent Activity</h2>
+                <button onClick={() => setShowHistory(true)} className="text-sm text-indigo-500 font-bold hover:underline">View All</button>
+              </div>
+              {history.length > 0 ? (
+                <div className="space-y-3">
+                  {history.slice(0, 3).map((item, i) => (
+                    <div key={i} className="p-4 bg-white/50 dark:bg-stone-800/50 rounded-2xl flex items-center justify-between hover:bg-white dark:hover:bg-stone-800 transition-colors">
+                      <div>
+                        <p className="font-bold text-stone-900 dark:text-stone-100">{item.title || `For ${item.data.recipient}`}</p>
+                        <p className="text-xs text-stone-500">{new Date(item.timestamp).toLocaleDateString()}</p>
+                      </div>
+                      <button onClick={() => { setCardData(item.data); setView('preview'); }} className="p-2 bg-stone-100 dark:bg-stone-700 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-stone-500 bg-white/30 dark:bg-stone-800/30 rounded-2xl border border-dashed border-stone-300 dark:border-stone-700">No recent activity</div>
+              )}
+            </div>
+
+            {/* Right Pane: Library */}
+            <div className="glass-panel p-6 rounded-3xl space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold flex items-center gap-2 text-stone-800 dark:text-stone-200"><BookMarked className="w-5 h-5 text-indigo-500" /> Your Library</h2>
+                <button onClick={() => setShowLibrary(true)} className="text-sm text-indigo-500 font-bold hover:underline">View All</button>
+              </div>
+              {library.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {library.slice(0, 2).map((item, i) => (
+                    <div key={i} className="relative aspect-[3/4] rounded-2xl overflow-hidden group cursor-pointer border border-stone-200 dark:border-stone-700" onClick={() => { setCardData(item.data); setView('preview'); }}>
+                      <img src={item.data.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 flex flex-col justify-end">
+                        <p className="text-white font-bold text-sm truncate">{item.title}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-stone-500 bg-white/30 dark:bg-stone-800/30 rounded-2xl border border-dashed border-stone-300 dark:border-stone-700 h-full flex items-center justify-center">Library is empty</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gallery */}
+      <div className="w-full max-w-7xl space-y-8">
+        <div className="flex items-center justify-between px-4">
+          <h2 className="text-3xl font-black text-stone-900 dark:text-stone-100 tracking-tight">Inspiration Gallery</h2>
+        </div>
+        <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
+          {TEMPLATES.map((template, i) => (
+            <div key={i} className="break-inside-avoid relative group rounded-[32px] overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 flex flex-col" onClick={() => handleStart(template.settings)}>
+              <div className="relative w-full aspect-square overflow-hidden">
+                <img src={template.image} alt={template.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              </div>
+              <div className="p-6 flex flex-col items-center text-center space-y-4">
+                <p className={`text-lg ${FONT_PAIRS[template.settings.fontPair as keyof typeof FONT_PAIRS]?.body || 'font-serif'} italic text-stone-800 dark:text-stone-200 leading-snug`}>
+                  "{template.sampleMessage}"
+                </p>
+                <div className="w-12 h-px bg-stone-300 dark:bg-stone-600"></div>
+                <p className="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest">{template.name}</p>
+              </div>
+              
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-6">
+                <button className="py-3 px-6 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+                  <Wand2 className="w-4 h-4" />
+                  Remix this style
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* How it Works Section */}
+      <div className="w-full max-w-7xl space-y-12 py-16 mt-12 border-t border-stone-200/50 dark:border-stone-800/50">
+        <div className="text-center space-y-4">
+          <h2 className="text-3xl md:text-4xl font-black text-stone-900 dark:text-stone-100 tracking-tight">How AuraCards Works</h2>
+          <p className="text-lg text-stone-600 dark:text-stone-400 max-w-2xl mx-auto">Create a breathtaking, personalized card in three simple steps.</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Step 1 */}
+          <div className="flex flex-col items-center text-center space-y-4 p-8 glass-panel rounded-[32px] hover:shadow-xl transition-all duration-300">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-500 dark:text-indigo-400 flex items-center justify-center mb-2">
+              <Gift className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-stone-800 dark:text-stone-200">1. Choose the Occasion</h3>
+            <p className="text-stone-600 dark:text-stone-400">Select from birthdays, anniversaries, milestones, or just because. Tell us who it's for.</p>
+          </div>
+          
+          {/* Step 2 */}
+          <div className="flex flex-col items-center text-center space-y-4 p-8 glass-panel rounded-[32px] hover:shadow-xl transition-all duration-300">
+            <div className="w-16 h-16 rounded-2xl bg-rose-100 dark:bg-rose-900/50 text-rose-500 dark:text-rose-400 flex items-center justify-center mb-2">
+              <MessageSquareHeart className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-stone-800 dark:text-stone-200">2. Add Personal Details</h3>
+            <p className="text-stone-600 dark:text-stone-400">Share a few details about their personality, interests, and the vibe you want to capture.</p>
+          </div>
+          
+          {/* Step 3 */}
+          <div className="flex flex-col items-center text-center space-y-4 p-8 glass-panel rounded-[32px] hover:shadow-xl transition-all duration-300">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-500 dark:text-emerald-400 flex items-center justify-center mb-2">
+              <Sparkles className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-stone-800 dark:text-stone-200">3. Generate Magic</h3>
+            <p className="text-stone-600 dark:text-stone-400">Our AI crafts a unique message and a stunning visual to match. Download or share instantly.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Call to Action */}
+      <div className="w-full max-w-3xl mx-auto text-center mt-12 mb-8 space-y-6">
+        <h2 className="text-3xl md:text-4xl font-bold text-stone-800 dark:text-stone-200">Ready to craft your masterpiece?</h2>
+        <p className="text-stone-600 dark:text-stone-400 text-lg">Let your imagination flow and create something unforgettable today.</p>
+        <button onClick={() => handleStart()} className="mt-4 px-10 py-5 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-full text-lg font-bold shadow-2xl hover:scale-105 transition-all flex items-center gap-3 mx-auto">
+          <Sparkles className="w-6 h-6" />
+          Start Creating Now
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
-  const [view, setView] = useState<'form' | 'preview'>('form');
+  const [view, setView] = useState<'home' | 'form' | 'preview'>('home');
   const [formStep, setFormStep] = useState(1);
   const [openOccasionGroup, setOpenOccasionGroup] = useState<string>('Milestones');
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -635,6 +837,7 @@ export default function App() {
   const [loadingMessage, setLoadingMessage] = useState('Gathering aura...');
   const [subjectImage, setSubjectImage] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showPreWrittenModal, setShowPreWrittenModal] = useState(false);
 
   useEffect(() => {
     if (!loading) return;
@@ -674,7 +877,16 @@ export default function App() {
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleMainMenu = () => {
     setShowMainMenu(!showMainMenu);
@@ -752,6 +964,7 @@ export default function App() {
     interests: '',
     imagePreferences: '',
     message: '',
+    preWrittenMessage: '',
     imageUrl: '',
     theme: 'elegant',
     palette: 'Champagne Gold',
@@ -843,6 +1056,19 @@ export default function App() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) processFile(file);
+  };
+
+  const handleCustomImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setCardData(prev => ({ ...prev, imageUrl: event.target!.result as string }));
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -965,6 +1191,29 @@ export default function App() {
 
   const [isSharing, setIsSharing] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [scheduleEmail, setScheduleEmail] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const customImageInputRef = useRef<HTMLInputElement>(null);
+  
+  const handleSchedule = () => {
+    if (!scheduleEmail || !scheduleDate || !scheduleTime) {
+      setErrorMessage("Please fill in all scheduling fields.");
+      return;
+    }
+    setIsScheduled(true);
+    setTimeout(() => {
+      setIsScheduled(false);
+      setShowShareModal(false);
+      setScheduleEmail('');
+      setScheduleDate('');
+      setScheduleTime('');
+      // Show success toast (simulated)
+      alert(`Card scheduled to be sent to ${scheduleEmail} on ${scheduleDate} at ${scheduleTime}!`);
+    }, 1500);
+  };
 
   const handleNativeShare = async () => {
     if (!cardData.imageUrl) return;
@@ -1109,12 +1358,15 @@ export default function App() {
         ? "Write this as a self-affirmation or personal celebration message from a first-person perspective (using 'I', 'me', 'my'). It should be empowering and reflective." 
         : `Write this as a message for ${relationshipStr}, ${recipientStr}.`;
 
-      const messageResponse = await withRetry(() => withTimeout(ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `Create a short, ${vibeDescription} ${occasion} message. ${perspectiveInstruction} ${contextInfo} ${interestsStr} Keep it under 50 words. Do not use placeholders or square brackets.`,
-      }), 60000));
+      let message = cardData.preWrittenMessage;
       
-      const message = messageResponse.text || `Happy ${occasion}!`;
+      if (!message) {
+        const messageResponse = await withRetry(() => withTimeout(ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: `Create a short, ${vibeDescription} ${occasion} message. ${perspectiveInstruction} ${contextInfo} ${interestsStr} Keep it under 50 words. Do not use placeholders or square brackets.`,
+        }), 60000));
+        message = messageResponse.text || `Happy ${occasion}!`;
+      }
 
       // 2. Generate Image with Nano Banana Pro
       const styleDesc = THEME_STYLES[cardData.theme];
@@ -1281,8 +1533,8 @@ export default function App() {
                   onClick={() => setShowTemplates(false)}
                   className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-700 dark:text-stone-300 font-medium"
                 >
-                  <Home className="w-4 h-4" />
-                  <span className="hidden sm:inline">Back to Home</span>
+                  <X className="w-4 h-4" />
+                  <span className="hidden sm:inline">Close</span>
                 </button>
               </div>
 
@@ -1290,7 +1542,7 @@ export default function App() {
                 {TEMPLATES.map((template, idx) => (
                   <div 
                     key={`${template.id}-${idx}`} 
-                    className="group glass-panel rounded-[32px] overflow-hidden hover:shadow-xl transition-all cursor-pointer"
+                    className="group glass-panel rounded-[32px] overflow-hidden hover:shadow-xl transition-all cursor-pointer flex flex-col"
                     onClick={() => {
                       setCardData({ 
                         ...cardData, 
@@ -1300,42 +1552,43 @@ export default function App() {
                       });
                       setShowTemplates(false);
                       setFormStep(2);
+                      setView('form');
                     }}
                   >
-                    <div className="aspect-[16/9] relative overflow-hidden">
+                    <div className="aspect-square relative overflow-hidden">
                       <img 
                         src={template.image} 
                         alt={template.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         referrerPolicy="no-referrer"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6">
-                        <div className="text-white">
-                          <h3 className="text-xl font-bold mb-1 flex items-center gap-2">
-                            {template.name}
-                            {template.id === 'self-affirmation' && (
-                              <span className="bg-amber-400 text-amber-950 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-tighter">Featured</span>
-                            )}
-                          </h3>
-                          <p className="text-white/80 text-sm leading-tight">{template.description}</p>
-                        </div>
-                      </div>
                       <div className="absolute top-4 right-4 glass-panel px-4 py-2 rounded-full text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest">
                         {template.settings.isSelf ? 'Self-Integration' : 'Gift Mode'}
                       </div>
                     </div>
-                    <div className="p-6 flex items-center justify-between bg-white/30 dark:bg-rose-950/50">
-                      <div className="flex gap-2">
-                        <span className="px-3 py-1 glass-input rounded-full text-[10px] uppercase font-bold text-stone-700 dark:text-rose-300/50">
-                          {template.settings.outputStyle}
-                        </span>
-                        <span className="px-3 py-1 glass-input rounded-full text-[10px] uppercase font-bold text-stone-700 dark:text-rose-300/50">
-                          {template.settings.theme}
+                    <div className="p-6 flex flex-col items-center text-center space-y-4 bg-white/30 dark:bg-rose-950/50 flex-grow">
+                      <p className={`text-lg ${FONT_PAIRS[template.settings.fontPair as keyof typeof FONT_PAIRS]?.body || 'font-serif'} italic text-stone-800 dark:text-stone-200 leading-snug`}>
+                        "{template.sampleMessage}"
+                      </p>
+                      <div className="w-12 h-px bg-stone-300 dark:bg-stone-600"></div>
+                      <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-widest flex items-center gap-2">
+                        {template.name}
+                        {template.id === 'self-affirmation' && (
+                          <span className="bg-amber-400 text-amber-950 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-tighter">Featured</span>
+                        )}
+                      </h3>
+                      <p className="text-stone-500 dark:text-stone-400 text-xs">{template.description}</p>
+                      
+                      <div className="pt-4 mt-auto w-full flex items-center justify-between border-t border-stone-200 dark:border-stone-700/50">
+                        <div className="flex gap-2">
+                          <span className="px-3 py-1 glass-input rounded-full text-[10px] uppercase font-bold text-stone-700 dark:text-rose-300/50">
+                            {template.settings.outputStyle}
+                          </span>
+                        </div>
+                        <span className="text-rose-500 dark:text-rose-400 font-bold text-sm flex items-center gap-1">
+                          Use <ChevronRight className="w-4 h-4" />
                         </span>
                       </div>
-                      <span className="text-rose-500 dark:text-rose-400 font-bold text-sm flex items-center gap-1">
-                        Use this Style <ChevronRight className="w-4 h-4" />
-                      </span>
                     </div>
                   </div>
                 ))}
@@ -1373,8 +1626,8 @@ export default function App() {
                     onClick={() => setShowHistory(false)}
                     className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-700 dark:text-stone-300 font-medium"
                   >
-                    <Home className="w-4 h-4" />
-                    <span className="hidden sm:inline">Back to Home</span>
+                    <X className="w-4 h-4" />
+                    <span className="hidden sm:inline">Close</span>
                   </button>
                 </div>
               </div>
@@ -1479,8 +1732,8 @@ export default function App() {
                     onClick={() => setShowLibrary(false)}
                     className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-700 dark:text-stone-300 font-medium"
                   >
-                    <Home className="w-4 h-4" />
-                    <span className="hidden sm:inline">Back to Home</span>
+                    <X className="w-4 h-4" />
+                    <span className="hidden sm:inline">Close</span>
                   </button>
                 </div>
               </div>
@@ -1572,13 +1825,29 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Top Navigation */}
-      <header className="fixed top-4 left-4 right-4 md:top-8 md:left-8 md:right-8 z-[120] flex justify-between items-center pointer-events-none">
+      {/* Menu Overlay */}
+      <AnimatePresence>
+        {(showMainMenu || showThemeMenu) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] bg-black/5 dark:bg-black/20 backdrop-blur-sm"
+            onClick={() => {
+              setShowMainMenu(false);
+              setShowThemeMenu(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Top Navigation Bar */}
+      <header className={`fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-[120] flex justify-between items-center px-4 py-2 transition-all duration-300 ${view === 'home' ? 'bg-white/90 dark:bg-stone-900/90 backdrop-blur-md border border-stone-200/50 dark:border-stone-800/50 rounded-full shadow-lg w-[95%] max-w-3xl' : 'w-full max-w-7xl px-4 md:px-8 bg-transparent border-transparent shadow-none'}`}>
         {/* Left: Main Menu */}
-        <div className="flex items-center gap-3 pointer-events-auto relative">
+        <div className="flex items-center gap-3 relative">
            <button
             onClick={toggleMainMenu}
-            className="p-2.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-stone-200/50 dark:border-stone-800/50 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all shadow-sm hover:shadow-md"
+            className={`p-2 rounded-xl transition-all ${view === 'home' ? 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800' : 'text-stone-700 dark:text-stone-300 glass-panel hover:bg-white/50 dark:hover:bg-stone-800/50'}`}
             title="Menu"
           >
             <Menu className="w-5 h-5" />
@@ -1593,6 +1862,16 @@ export default function App() {
                 className="absolute left-0 top-full mt-3 w-56 bg-white dark:bg-stone-900 rounded-2xl overflow-hidden shadow-xl border border-stone-200 dark:border-stone-800 z-50 p-2"
               >
                 <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => {
+                      setView('home');
+                      setShowMainMenu(false);
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
+                  >
+                    <Home className="w-4 h-4 text-stone-500 dark:text-stone-400" />
+                    Home
+                  </button>
                   <button
                     onClick={toggleTemplates}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
@@ -1620,15 +1899,46 @@ export default function App() {
           </AnimatePresence>
         </div>
 
-        {/* Right: Theme */}
-        <div className="flex items-center gap-3 pointer-events-auto">
+        {/* Center: AuraCards Logo */}
+        {view === 'home' && (
+          <div 
+            className="flex items-center gap-2 cursor-pointer absolute left-1/2 -translate-x-1/2"
+            onClick={() => {
+              setView('home');
+              setFormStep(1);
+            }}
+          >
+            <Sparkles className="w-5 h-5 text-indigo-500 dark:text-purple-400" />
+            <h1 className="text-xl md:text-2xl serif font-bold tracking-tight iridescent-text">AuraCards</h1>
+          </div>
+        )}
+
+        {/* Right: Theme & Start Button */}
+        <div className="flex items-center gap-2 md:gap-3">
+          <AnimatePresence>
+            {isScrolled && view === 'home' && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                onClick={() => {
+                  setFormStep(1);
+                  setView('form');
+                }}
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md transition-all"
+              >
+                <Sparkles className="w-4 h-4" />
+                Start Creating
+              </motion.button>
+            )}
+          </AnimatePresence>
           <div className="relative">
             <button
               onClick={toggleThemeMenu}
-              className="p-2.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-stone-200/50 dark:border-stone-800/50 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all shadow-sm hover:shadow-md"
+              className={`p-2 rounded-xl transition-all ${view === 'home' ? 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800' : 'text-stone-700 dark:text-stone-300 glass-panel hover:bg-white/50 dark:hover:bg-stone-800/50'}`}
               title="Workspace Theme"
             >
-              <Palette className="w-4 h-4 text-rose-500" />
+              <Palette className="w-5 h-5 text-rose-500" />
             </button>
             <AnimatePresence>
               {showThemeMenu && (
@@ -1675,34 +1985,54 @@ export default function App() {
           </div>
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-stone-200/50 dark:border-stone-800/50 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all shadow-sm hover:shadow-md"
+            className="p-2 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all"
             title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
           >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+            {isDarkMode ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-indigo-500" />}
           </button>
         </div>
       </header>
 
       {/* Header */}
-      <div className="mb-8 text-center relative mt-16 md:mt-12">
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-center gap-2 mb-2 cursor-pointer"
-          onClick={() => {
-            setView('form');
-            setFormStep(1);
-          }}
-        >
-          <Sparkles className="w-8 h-8 text-indigo-500 dark:text-purple-400" />
-          <h1 className="text-5xl md:text-6xl serif font-light tracking-tight iridescent-text">AuraCards</h1>
-        </motion.div>
-        <p className="text-stone-700 dark:text-stone-400 text-xs uppercase tracking-[0.5em] font-bold">Nano Banana Pro Edition</p>
-      </div>
+      {view !== 'home' && (
+        <div className="mb-8 text-center relative mt-4 md:mt-6 z-[130]">
+          <div 
+            className="inline-flex items-center justify-center gap-3 md:gap-4 mb-3 cursor-pointer hover:scale-105 transition-transform"
+            onClick={() => {
+              setView('home');
+              setFormStep(1);
+            }}
+          >
+            <div className="p-2 md:p-3 bg-white/50 dark:bg-stone-800/50 rounded-2xl shadow-sm backdrop-blur-sm border border-stone-200/50 dark:border-stone-700/50">
+              <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-indigo-500 dark:text-purple-400" />
+            </div>
+            <h1 className="text-5xl md:text-6xl serif font-bold tracking-tight iridescent-text">AuraCards</h1>
+          </div>
+          <p className="text-stone-700 dark:text-stone-400 text-sm md:text-base uppercase tracking-[0.5em] font-bold">Nano Banana Pro Edition</p>
+        </div>
+      )}
 
-      <main className="w-full max-w-6xl relative z-10">
+      <main className="w-full max-w-7xl relative z-10">
         <AnimatePresence mode="wait">
-          {loading ? (
+          {view === 'home' ? (
+            <motion.div
+              key="home"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <HomePage 
+                setView={setView} 
+                setCardData={setCardData} 
+                history={history} 
+                library={library} 
+                setShowTemplates={setShowTemplates} 
+                setShowLibrary={setShowLibrary} 
+                setShowHistory={setShowHistory} 
+                setFormStep={setFormStep}
+              />
+            </motion.div>
+          ) : loading ? (
             <motion.div
               key="loading"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -2044,6 +2374,25 @@ export default function App() {
                       </div>
                       
                       <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Pre-written Message</label>
+                          <button 
+                            onClick={() => setShowPreWrittenModal(true)}
+                            className="text-xs font-bold text-indigo-500 dark:text-purple-400 hover:underline flex items-center gap-1"
+                          >
+                            <BookMarked className="w-3 h-3" />
+                            Browse Library
+                          </button>
+                        </div>
+                        <textarea 
+                          value={cardData.preWrittenMessage}
+                          onChange={e => setCardData({...cardData, preWrittenMessage: e.target.value})}
+                          placeholder="Leave blank for AI to generate a message, or type/select your own..."
+                          className="w-full glass-input rounded-2xl p-4 h-24 resize-none text-sm outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
                         <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400">Specific Visuals / Features</label>
                         <textarea 
                           value={cardData.imagePreferences}
@@ -2140,24 +2489,6 @@ export default function App() {
                                 </div>
                               </div>
 
-                              <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-3">Theme & Vibe</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                  {(['classic', 'modern', 'playful', 'elegant'] as const).map((t, idx) => (
-                                    <button
-                                      key={`${t}-${idx}`}
-                                      onClick={() => setCardData({...cardData, theme: t})}
-                                      className={`p-3 rounded-xl border-2 text-xs font-bold capitalize transition-all ${
-                                        cardData.theme === t 
-                                        ? 'iridescent-bg text-white border-transparent shadow-md' 
-                                        : 'glass-input text-black dark:text-stone-200 hover:border-stone-200 dark:hover:border-stone-800'
-                                      }`}
-                                    >
-                                      {t}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
                             </div>
                           </div>
 
@@ -2192,6 +2523,25 @@ export default function App() {
                                     placeholder="e.g. From Prince"
                                     className="w-full glass-input rounded-xl p-3 text-sm outline-none"
                                   />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-3">Theme & Vibe</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {(['classic', 'modern', 'playful', 'elegant'] as const).map((t, idx) => (
+                                    <button
+                                      key={`${t}-${idx}`}
+                                      onClick={() => setCardData({...cardData, theme: t})}
+                                      className={`p-3 rounded-xl border-2 text-xs font-bold capitalize transition-all ${
+                                        cardData.theme === t 
+                                        ? 'iridescent-bg text-white border-transparent shadow-md' 
+                                        : 'glass-input text-black dark:text-stone-200 hover:border-stone-200 dark:hover:border-stone-800'
+                                      }`}
+                                    >
+                                      {t}
+                                    </button>
+                                  ))}
                                 </div>
                               </div>
                             </div>
@@ -2257,6 +2607,13 @@ export default function App() {
 
                 <div className="flex items-center gap-3">
                   <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all font-bold text-xs uppercase tracking-widest border ${isEditing ? 'bg-indigo-500 text-white border-indigo-600' : 'glass-panel text-stone-600 dark:text-stone-100 border-indigo-200 dark:border-indigo-800'}`}
+                  >
+                    <Palette className={`w-4 h-4 ${isEditing ? 'text-white' : 'text-indigo-500 dark:text-purple-400'}`} />
+                    {isEditing ? 'Done Editing' : 'Edit Design'}
+                  </button>
+                  <button
                     onClick={copyMessage}
                     className="flex items-center gap-2 px-6 py-3 glass-panel rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all text-stone-600 dark:text-stone-100 font-bold text-xs uppercase tracking-widest"
                   >
@@ -2294,62 +2651,164 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Single Result: The Image */}
-              <div className={`relative w-full ${ASPECT_RATIOS[cardData.aspectRatio].class} rounded-[48px] overflow-hidden glass-panel group border-[12px]`}>
-                {cardData.imageUrl ? (
-                  <>
-                    <img 
-                      src={cardData.imageUrl} 
-                      alt="Generated Birthday Card" 
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                    
-                    {/* Floating Quick Actions (Hover Only) */}
-                    <div className="absolute top-8 right-8 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <button
-                        onClick={() => handleDownload()}
-                        className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
-                        title="Download PNG"
-                      >
-                        <ImageIcon className="w-6 h-6 group-hover:animate-bounce transition-transform" />
-                      </button>
-                      <button
-                        onClick={() => handleDownloadPDF()}
-                        className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
-                        title="Download PDF"
-                      >
-                        <FileText className="w-6 h-6 group-hover:animate-bounce transition-transform" />
-                      </button>
-                      <button
-                        onClick={handleShare}
-                        className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
-                        title="Share Card"
-                      >
-                        <Share2 className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                      </button>
-                      <button
-                        onClick={saveToLibrary}
-                        className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
-                        title="Save to Library"
-                      >
-                        {savedToLibrary ? <Check className="w-6 h-6 text-emerald-500" /> : <BookmarkPlus className="w-6 h-6 group-hover:scale-110 transition-transform" />}
-                      </button>
-                      <button
-                        onClick={copyMessage}
-                        className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
-                        title="Copy Message"
-                      >
-                        {copied ? <Check className="w-6 h-6 text-emerald-500" /> : <Copy className="w-6 h-6 group-hover:rotate-12 transition-transform" />}
-                      </button>
-                    </div>
+              <div className={`w-full flex flex-col ${isEditing ? 'lg:flex-row' : ''} gap-8`}>
+                {/* Single Result: The Image */}
+                <div className={`relative w-full ${isEditing ? 'lg:w-1/2' : ''} ${ASPECT_RATIOS[cardData.aspectRatio].class} rounded-[48px] overflow-hidden glass-panel group border-[12px]`}>
+                  {cardData.imageUrl ? (
+                    <>
+                      <img 
+                        src={cardData.imageUrl} 
+                        alt="Generated Birthday Card" 
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      
+                      {/* Floating Quick Actions (Hover Only) */}
+                      <div className="absolute top-8 right-8 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <button
+                          onClick={() => handleDownload()}
+                          className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
+                          title="Download PNG"
+                        >
+                          <ImageIcon className="w-6 h-6 group-hover:animate-bounce transition-transform" />
+                        </button>
+                        <button
+                          onClick={() => handleDownloadPDF()}
+                          className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
+                          title="Download PDF"
+                        >
+                          <FileText className="w-6 h-6 group-hover:animate-bounce transition-transform" />
+                        </button>
+                        <button
+                          onClick={handleShare}
+                          className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
+                          title="Share Card"
+                        >
+                          <Share2 className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+                        </button>
+                        <button
+                          onClick={saveToLibrary}
+                          className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
+                          title="Save to Library"
+                        >
+                          {savedToLibrary ? <Check className="w-6 h-6 text-emerald-500" /> : <BookmarkPlus className="w-6 h-6 group-hover:scale-110 transition-transform" />}
+                        </button>
+                        <button
+                          onClick={copyMessage}
+                          className="p-4 glass-panel text-indigo-500 dark:text-purple-400 rounded-2xl hover:scale-110 transition-all group"
+                          title="Copy Message"
+                        >
+                          {copied ? <Check className="w-6 h-6 text-emerald-500" /> : <Copy className="w-6 h-6 group-hover:rotate-12 transition-transform" />}
+                        </button>
+                      </div>
 
-                  </>
-                ) : (
-                  <div className="w-full h-full bg-transparent flex flex-col items-center justify-center gap-4">
-                    <RefreshCw className="w-12 h-12 text-indigo-500 dark:text-purple-400 animate-spin" />
-                    <p className="text-stone-600 dark:text-stone-400 font-bold uppercase tracking-widest text-xs">{loadingMessage}</p>
-                  </div>
+                    </>
+                  ) : (
+                    <div className="w-full h-full bg-transparent flex flex-col items-center justify-center gap-4">
+                      <RefreshCw className="w-12 h-12 text-indigo-500 dark:text-purple-400 animate-spin" />
+                      <p className="text-stone-600 dark:text-stone-400 font-bold uppercase tracking-widest text-xs">{loadingMessage}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Edit Panel */}
+                {isEditing && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    className="w-full lg:w-1/2 flex flex-col gap-6"
+                  >
+                    <div className="glass-panel rounded-3xl p-8 space-y-8">
+                      <h3 className="text-xl font-bold text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                        <Settings2 className="w-6 h-6 text-indigo-500" />
+                        Customize Design
+                      </h3>
+
+                      {/* Custom Image Upload */}
+                      <div className="space-y-4">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
+                          Custom Background Image
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          ref={customImageInputRef}
+                          onChange={handleCustomImageUpload}
+                          className="hidden"
+                        />
+                        <button
+                          onClick={() => customImageInputRef.current?.click()}
+                          className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-indigo-200 dark:border-indigo-800 rounded-2xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors text-indigo-600 dark:text-indigo-400 font-bold"
+                        >
+                          <Upload className="w-5 h-5" />
+                          Upload Your Own Photo
+                        </button>
+                      </div>
+
+                      {/* Typography Selection */}
+                      <div className="space-y-4">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
+                          Typography Style
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {Object.keys(FONT_PAIRS).map(font => (
+                            <button
+                              key={font}
+                              onClick={() => setCardData({ ...cardData, fontPair: font as keyof typeof FONT_PAIRS })}
+                              className={`p-4 rounded-2xl border-2 transition-all text-left ${
+                                cardData.fontPair === font 
+                                  ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
+                                  : 'border-transparent glass-panel hover:border-indigo-200 dark:hover:border-indigo-800'
+                              }`}
+                            >
+                              <div className="font-bold text-stone-800 dark:text-stone-200">{font}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Color Palette */}
+                      <div className="space-y-4">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
+                          Color Palette
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {Object.keys(PALETTES).map(palette => (
+                            <button
+                              key={palette}
+                              onClick={() => setCardData({ ...cardData, palette: palette as keyof typeof PALETTES })}
+                              className={`p-4 rounded-2xl border-2 transition-all text-left ${
+                                cardData.palette === palette 
+                                  ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
+                                  : 'border-transparent glass-panel hover:border-indigo-200 dark:hover:border-indigo-800'
+                              }`}
+                            >
+                              <div className="font-bold text-stone-800 dark:text-stone-200">{palette}</div>
+                              <div className="flex gap-2 mt-2">
+                                <div className={`w-6 h-6 rounded-full shadow-inner ${PALETTES[palette as keyof typeof PALETTES].bg}`} />
+                                <div className={`w-6 h-6 rounded-full shadow-inner ${PALETTES[palette as keyof typeof PALETTES].text}`} />
+                                <div className={`w-6 h-6 rounded-full shadow-inner ${PALETTES[palette as keyof typeof PALETTES].accent}`} />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Message Editing */}
+                      <div className="space-y-4">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
+                          Edit Message
+                        </label>
+                        <textarea
+                          value={cardData.message}
+                          onChange={(e) => setCardData({ ...cardData, message: e.target.value })}
+                          className="w-full h-32 glass-input rounded-2xl p-4 text-sm outline-none resize-none"
+                          placeholder="Your card message..."
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
               </div>
 
@@ -2380,6 +2839,66 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Pre-written Messages Modal */}
+      <AnimatePresence>
+        {showPreWrittenModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPreWrittenModal(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-2xl max-h-[80vh] overflow-y-auto glass-panel z-50 p-6 md:p-8 rounded-[32px] shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-stone-800 dark:text-rose-50">Message Library</h3>
+                <button 
+                  onClick={() => setShowPreWrittenModal(false)}
+                  className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-stone-500" />
+                </button>
+              </div>
+              
+              <div className="space-y-8">
+                {Object.entries(getPreWrittenMessages(cardData.occasion, cardData.customOccasion)).map(([relationship, tones]) => (
+                  <div key={relationship} className="space-y-4">
+                    <h4 className="text-lg font-bold text-indigo-600 dark:text-indigo-400 border-b border-stone-200 dark:border-stone-800 pb-2">{relationship}</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {Object.entries(tones).map(([tone, messages]) => (
+                        <div key={tone} className="space-y-2">
+                          <h5 className="text-sm font-bold text-stone-500 dark:text-stone-400 uppercase tracking-widest">{tone}</h5>
+                          <div className="space-y-2">
+                            {messages.map((msg, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => {
+                                  setCardData({...cardData, preWrittenMessage: msg});
+                                  setShowPreWrittenModal(false);
+                                }}
+                                className="w-full text-left p-3 text-sm bg-white/50 dark:bg-stone-900/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 border border-stone-200 dark:border-stone-800 rounded-xl transition-colors text-stone-700 dark:text-stone-300"
+                              >
+                                {msg}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Share Modal */}
       <AnimatePresence>
@@ -2486,6 +3005,53 @@ export default function App() {
                   </div>
                   <ChevronRight className="w-5 h-5 text-stone-400 group-hover:text-emerald-500 transition-colors" />
                 </button>
+              </div>
+
+              {/* Schedule Delivery Section */}
+              <div className="mt-8 pt-8 border-t border-stone-200 dark:border-stone-800">
+                <h4 className="text-lg font-bold text-stone-800 dark:text-rose-50 mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-indigo-500" />
+                  Schedule Delivery
+                </h4>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500">Recipient Email</label>
+                    <input 
+                      type="email" 
+                      value={scheduleEmail}
+                      onChange={e => setScheduleEmail(e.target.value)}
+                      placeholder="friend@example.com"
+                      className="w-full glass-input rounded-xl p-3 text-sm outline-none"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-widest text-stone-500">Date</label>
+                      <input 
+                        type="date" 
+                        value={scheduleDate}
+                        onChange={e => setScheduleDate(e.target.value)}
+                        className="w-full glass-input rounded-xl p-3 text-sm outline-none"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-widest text-stone-500">Time</label>
+                      <input 
+                        type="time" 
+                        value={scheduleTime}
+                        onChange={e => setScheduleTime(e.target.value)}
+                        className="w-full glass-input rounded-xl p-3 text-sm outline-none"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleSchedule}
+                    disabled={isScheduled}
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    {isScheduled ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Schedule Card'}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </>
