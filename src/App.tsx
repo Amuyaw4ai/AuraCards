@@ -40,6 +40,10 @@ import {
   Droplets,
   TreePine,
   Square,
+  Monitor,
+  Smartphone,
+  MonitorPlay,
+  TabletSmartphone,
   Share2,
   BookMarked,
   Search,
@@ -129,11 +133,11 @@ const OCCASIONS = {
 };
 
 const ASPECT_RATIOS = {
-  '1:1': { label: 'Square', icon: '⬜', class: 'aspect-square' },
-  '4:3': { label: 'Standard', icon: '📺', class: 'aspect-[4/3]' },
-  '3:4': { label: 'Portrait', icon: '📱', class: 'aspect-[3/4]' },
-  '16:9': { label: 'Widescreen', icon: '🎞️', class: 'aspect-video' },
-  '9:16': { label: 'Story', icon: '🤳', class: 'aspect-[9/16]' },
+  '1:1': { label: 'Square', icon: <Square className="w-5 h-5" />, class: 'aspect-square' },
+  '4:3': { label: 'Standard', icon: <Monitor className="w-5 h-5" />, class: 'aspect-[4/3]' },
+  '3:4': { label: 'Portrait', icon: <TabletSmartphone className="w-5 h-5" />, class: 'aspect-[3/4]' },
+  '16:9': { label: 'Widescreen', icon: <MonitorPlay className="w-5 h-5" />, class: 'aspect-video' },
+  '9:16': { label: 'Story', icon: <Smartphone className="w-5 h-5" />, class: 'aspect-[9/16]' },
 };
 
 const PALETTES = {
@@ -157,23 +161,79 @@ const FONT_PAIRS = {
 
 
 const THEME_STYLES = {
-  classic: "timeless, oil painting style, ornate details, rich textures",
-  modern: "minimalist, vector art, flat design, clean lines, geometric",
-  playful: "whimsical, watercolor, bright colors, hand-drawn, cheerful",
-  elegant: "sophisticated, fine line art, gold foil accents, ethereal, soft lighting",
+  classic: {
+    prompt: "timeless, oil painting style, ornate details, rich textures",
+    description: "Looks like an old, beautiful painting.",
+    image: "https://loremflickr.com/200/200/classic,painting/all"
+  },
+  modern: {
+    prompt: "minimalist, vector art, flat design, clean lines, geometric",
+    description: "Clean shapes and simple lines.",
+    image: "https://loremflickr.com/200/200/modern,art/all"
+  },
+  playful: {
+    prompt: "whimsical, watercolor, bright colors, hand-drawn, cheerful",
+    description: "Bright, fun, and colorful.",
+    image: "https://loremflickr.com/200/200/playful,art/all"
+  },
+  elegant: {
+    prompt: "sophisticated, fine line art, gold foil accents, ethereal, soft lighting",
+    description: "Soft, fancy, and very pretty.",
+    image: "https://loremflickr.com/200/200/elegant,art/all"
+  }
 };
 
 const OUTPUT_STYLES = {
-  'Studio Ghibli': "Studio Ghibli style, hand-drawn anime, whimsical atmosphere, lush painted backgrounds, soft lighting, masterpiece animation aesthetic",
-  'Photorealistic': "high-end photorealistic photography, natural lighting, 8k resolution, sharp focus, professional camera quality, realistic skin textures",
-  '3D Render': "modern 3D CGI render, Pixar style, cinematic lighting, octane render, smooth surfaces, vibrant colors, high-quality character design",
-  'Artistic Cartoon': "vibrant artistic cartoon, stylized, bold colors, expressive, high quality illustration",
-  'Oil Painting': "classic oil painting, visible brushstrokes, rich textures, museum quality, masterpiece, Renaissance style",
-  'Cyberpunk Neon': "cyberpunk aesthetic, neon lights, futuristic, high contrast, detailed digital art, synthwave colors",
-  'Vector Art': "clean vector art, flat design, bold colors, minimalist, geometric shapes, modern illustration",
-  'Watercolor': "soft watercolor painting, bleeding colors, paper texture, delicate brushstrokes, artistic, ethereal",
-  'Digital Art': "high quality digital painting, concept art, detailed, atmospheric lighting, professional illustration",
-  'Anime/Manga': "anime style, manga illustration, cel shaded, expressive characters, vibrant colors, dynamic composition",
+  'Studio Ghibli': {
+    prompt: "Studio Ghibli style, hand-drawn anime, whimsical atmosphere, lush painted backgrounds, soft lighting, masterpiece animation aesthetic",
+    description: "Looks like a hand-drawn Japanese animated movie.",
+    image: "https://loremflickr.com/200/200/anime,scenery/all"
+  },
+  'Photorealistic': {
+    prompt: "high-end photorealistic photography, natural lighting, 8k resolution, sharp focus, professional camera quality, realistic skin textures",
+    description: "Looks like a real, high-quality photo.",
+    image: "https://loremflickr.com/200/200/portrait,photography/all"
+  },
+  '3D Render': {
+    prompt: "modern 3D CGI render, Pixar style, cinematic lighting, octane render, smooth surfaces, vibrant colors, high-quality character design",
+    description: "Looks like a modern 3D animated movie.",
+    image: "https://loremflickr.com/200/200/3d,render/all"
+  },
+  'Artistic Cartoon': {
+    prompt: "vibrant artistic cartoon, stylized, bold colors, expressive, high quality illustration",
+    description: "A bright and colorful cartoon drawing.",
+    image: "https://loremflickr.com/200/200/cartoon,illustration/all"
+  },
+  'Oil Painting': {
+    prompt: "classic oil painting, visible brushstrokes, rich textures, museum quality, masterpiece, Renaissance style",
+    description: "Looks like a classic painting on canvas.",
+    image: "https://loremflickr.com/200/200/oil,painting/all"
+  },
+  'Cyberpunk Neon': {
+    prompt: "cyberpunk aesthetic, neon lights, futuristic, high contrast, detailed digital art, synthwave colors",
+    description: "Bright neon colors with a futuristic city vibe.",
+    image: "https://loremflickr.com/200/200/cyberpunk,neon/all"
+  },
+  'Vector Art': {
+    prompt: "clean vector art, flat design, bold colors, minimalist, geometric shapes, modern illustration",
+    description: "Clean shapes and solid colors.",
+    image: "https://loremflickr.com/200/200/vector,illustration/all"
+  },
+  'Watercolor': {
+    prompt: "soft watercolor painting, bleeding colors, paper texture, delicate brushstrokes, artistic, ethereal",
+    description: "Soft colors that blend like water paint.",
+    image: "https://loremflickr.com/200/200/watercolor,painting/all"
+  },
+  'Digital Art': {
+    prompt: "high quality digital painting, concept art, detailed, atmospheric lighting, professional illustration",
+    description: "A high-quality digital drawing.",
+    image: "https://loremflickr.com/200/200/digital,art/all"
+  },
+  'Anime/Manga': {
+    prompt: "anime style, manga illustration, cel shaded, expressive characters, vibrant colors, dynamic composition",
+    description: "A classic comic book or anime style.",
+    image: "https://loremflickr.com/200/200/manga,anime/all"
+  },
 };
 
 const TEMPLATES = [
@@ -658,7 +718,8 @@ const HomePage = ({
   setShowTemplates,
   setShowLibrary,
   setShowHistory,
-  setFormStep
+  setFormStep,
+  restoreCard
 }: {
   setView: (v: 'home' | 'form' | 'preview') => void;
   setCardData: (d: any) => void;
@@ -668,6 +729,7 @@ const HomePage = ({
   setShowLibrary: (v: boolean) => void;
   setShowHistory: (v: boolean) => void;
   setFormStep: (step: number) => void;
+  restoreCard: (data: any, subjectImg?: string) => void;
 }) => {
   const handleStart = (preset?: any) => {
     if (preset) {
@@ -680,7 +742,7 @@ const HomePage = ({
   };
 
   return (
-    <div className="w-full min-h-screen pt-24 pb-12 px-4 md:px-8 flex flex-col items-center gap-16">
+    <div className="w-full min-h-screen pt-32 pb-12 px-4 md:px-8 flex flex-col items-center gap-16">
       {/* Header */}
       <div className="text-center space-y-6 max-w-3xl mx-auto">
         <h1 className="text-5xl md:text-7xl font-black text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
@@ -712,7 +774,7 @@ const HomePage = ({
                         <p className="font-bold text-stone-900 dark:text-stone-100">{item.title || `For ${item.data.recipient}`}</p>
                         <p className="text-xs text-stone-500">{new Date(item.timestamp).toLocaleDateString()}</p>
                       </div>
-                      <button onClick={() => { setCardData(item.data); setView('preview'); }} className="p-2 bg-stone-100 dark:bg-stone-700 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">
+                      <button onClick={() => restoreCard(item.data, item.subjectImage)} className="p-2 bg-stone-100 dark:bg-stone-700 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -732,7 +794,7 @@ const HomePage = ({
               {library.length > 0 ? (
                 <div className="grid grid-cols-2 gap-3">
                   {library.slice(0, 2).map((item, i) => (
-                    <div key={i} className="relative aspect-[3/4] rounded-2xl overflow-hidden group cursor-pointer border border-stone-200 dark:border-stone-700" onClick={() => { setCardData(item.data); setView('preview'); }}>
+                    <div key={i} className="relative aspect-[3/4] rounded-2xl overflow-hidden group cursor-pointer border border-stone-200 dark:border-stone-700" onClick={() => restoreCard(item.data, item.subjectImage)}>
                       <img src={item.data.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 flex flex-col justify-end">
                         <p className="text-white font-bold text-sm truncate">{item.title}</p>
@@ -977,6 +1039,9 @@ export default function App() {
     isSelf: false,
   });
 
+  const [cardVersions, setCardVersions] = useState<CardData[]>([]);
+  const [currentVersionIndex, setCurrentVersionIndex] = useState(-1);
+
   useEffect(() => {
     checkKey();
   }, []);
@@ -1175,10 +1240,16 @@ export default function App() {
     setLibrary(prev => [newItem, ...prev]);
   };
 
-  const restoreFromHistory = (item: HistoryItem) => {
-    setCardData(item.data);
-    setSubjectImage(item.subjectImage);
+  const restoreCard = (data: CardData, subjectImg?: string) => {
+    setCardData(data);
+    if (subjectImg !== undefined) setSubjectImage(subjectImg);
+    setCardVersions([data]);
+    setCurrentVersionIndex(0);
     setView('preview');
+  };
+
+  const restoreFromHistory = (item: HistoryItem) => {
+    restoreCard(item.data, item.subjectImage);
     setShowHistory(false);
   };
 
@@ -1295,17 +1366,23 @@ export default function App() {
         } catch (error: any) {
           const isRetryable = 
             error.status === 'UNAVAILABLE' || 
+            error.status === 'INTERNAL' ||
             error.code === 503 || 
+            error.code === 500 || 
             error.message?.toLowerCase().includes("503") || 
+            error.message?.toLowerCase().includes("500") || 
+            error.message?.toLowerCase().includes("internal error") || 
             error.message?.toLowerCase().includes("high demand") ||
             error.message?.toLowerCase().includes("temporary") ||
-            error.message?.toLowerCase().includes("busy");
+            error.message?.toLowerCase().includes("busy") ||
+            error.message === 'Timeout' ||
+            error.message?.toLowerCase().includes("timeout");
             
           if (isRetryable && retries < maxRetries - 1) {
             retries++;
             // Exponential backoff: 3s, 6s, 12s, 24s, 48s
             const delay = initialDelay * Math.pow(2, retries - 1);
-            console.log(`Retrying API call (${retries}/${maxRetries}) due to high demand. Waiting ${delay}ms...`);
+            console.log(`Retrying API call (${retries}/${maxRetries}) due to error: ${error.message || error.status}. Waiting ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             continue;
           }
@@ -1369,9 +1446,9 @@ export default function App() {
       }
 
       // 2. Generate Image with Nano Banana Pro
-      const styleDesc = THEME_STYLES[cardData.theme];
-      const outputStyleDesc = OUTPUT_STYLES[cardData.outputStyle];
-      const userPrefs = cardData.imagePreferences ? `CRITICAL VISUAL INSTRUCTIONS FROM USER: The user explicitly requested the following elements to be in the image: "${cardData.imagePreferences}". You MUST include these specific features, objects, or actions exactly as described.` : '';
+      const styleDesc = THEME_STYLES[cardData.theme].prompt;
+      const outputStyleDesc = OUTPUT_STYLES[cardData.outputStyle].prompt;
+      const userPrefs = cardData.imagePreferences ? `CRITICAL VISUAL INSTRUCTIONS FROM USER: The user explicitly requested the following elements to be in the image: "${cardData.imagePreferences}". You MUST include these specific features, templates, objects, or actions exactly as described.` : '';
       
       let imagePrompt = `A high-quality, professional ${occasion} card illustration for ${recipientStr}. ${contextInfo} Style: ${styleDesc} and ${outputStyleDesc}. ${interestsStr} ${userPrefs} The image should be beautiful and celebratory for the occasion of ${occasion}. Please include the text "Happy ${occasion} ${recipientStr}!" artistically integrated into the design.${signatureStr}`;
       
@@ -1452,17 +1529,24 @@ export default function App() {
         }
       }
 
-      setCardData(prev => ({ ...prev, message, imageUrl }));
+      const newCardData = { ...cardData, message, imageUrl };
+      setCardData(newCardData);
       
       if (imageUrl) {
         const newHistoryItem: HistoryItem = {
           id: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
           timestamp: Date.now(),
           title: `${cardData.theme} ${cardData.occasion} for ${cardData.recipient}`,
-          data: { ...cardData, message, imageUrl },
+          data: newCardData,
           subjectImage: subjectImage
         };
         setHistory(prev => [newHistoryItem, ...prev].slice(0, 20)); // Limit to 20 items to save space
+        
+        setCardVersions(prev => {
+          const updated = [...prev.slice(0, currentVersionIndex + 1), newCardData];
+          setCurrentVersionIndex(updated.length - 1);
+          return updated;
+        });
       }
 
       setView('preview');
@@ -1509,7 +1593,7 @@ export default function App() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center p-4 md:p-8" onPaste={handlePaste}>
+    <div className={`relative min-h-screen flex flex-col items-center p-4 md:p-8 ${view === 'home' ? 'justify-center' : 'justify-start pt-32 md:pt-40'}`} onPaste={handlePaste}>
       <BackgroundOrbs />
       {/* Templates View */}
       <AnimatePresence>
@@ -1772,9 +1856,7 @@ export default function App() {
                           exit={{ opacity: 0, scale: 0.95 }}
                           className="group relative bg-white dark:bg-stone-800/50 border border-stone-100 dark:border-stone-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
                           onClick={() => {
-                            setCardData(item.data);
-                            setSubjectImage(item.subjectImage);
-                            setView('preview');
+                            restoreCard(item.data, item.subjectImage);
                             setShowLibrary(false);
                           }}
                         >
@@ -1842,175 +1924,162 @@ export default function App() {
       </AnimatePresence>
 
       {/* Top Navigation Bar */}
-      <header className={`fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-[120] flex justify-between items-center px-4 py-2 transition-all duration-300 ${view === 'home' ? 'bg-white/90 dark:bg-stone-900/90 backdrop-blur-md border border-stone-200/50 dark:border-stone-800/50 rounded-full shadow-lg w-[95%] max-w-3xl' : 'w-full max-w-7xl px-4 md:px-8 bg-transparent border-transparent shadow-none'}`}>
-        {/* Left: Main Menu */}
-        <div className="flex items-center gap-3 relative">
-           <button
-            onClick={toggleMainMenu}
-            className={`p-2 rounded-xl transition-all ${view === 'home' ? 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800' : 'text-stone-700 dark:text-stone-300 glass-panel hover:bg-white/50 dark:hover:bg-stone-800/50'}`}
-            title="Menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          
-          <AnimatePresence>
-            {showMainMenu && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                className="absolute left-0 top-full mt-3 w-56 bg-white dark:bg-stone-900 rounded-2xl overflow-hidden shadow-xl border border-stone-200 dark:border-stone-800 z-50 p-2"
-              >
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => {
-                      setView('home');
-                      setShowMainMenu(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
-                  >
-                    <Home className="w-4 h-4 text-stone-500 dark:text-stone-400" />
-                    Home
-                  </button>
-                  <button
-                    onClick={toggleTemplates}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
-                  >
-                    <Layout className="w-4 h-4 text-rose-500 dark:text-rose-400" />
-                    Templates
-                  </button>
-                  <button
-                    onClick={toggleLibrary}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
-                  >
-                    <BookMarked className="w-4 h-4 text-indigo-500 dark:text-purple-400" />
-                    Library
-                  </button>
-                  <button
-                    onClick={toggleHistory}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
-                  >
-                    <History className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                    History
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Center: AuraCards Logo */}
-        {view === 'home' && (
-          <div 
-            className="flex items-center gap-2 cursor-pointer absolute left-1/2 -translate-x-1/2"
-            onClick={() => {
-              setView('home');
-              setFormStep(1);
-            }}
-          >
-            <Sparkles className="w-5 h-5 text-indigo-500 dark:text-purple-400" />
-            <h1 className="text-xl md:text-2xl serif font-bold tracking-tight iridescent-text">AuraCards</h1>
-          </div>
-        )}
-
-        {/* Right: Theme & Start Button */}
-        <div className="flex items-center gap-2 md:gap-3">
-          <AnimatePresence>
-            {isScrolled && view === 'home' && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                onClick={() => {
-                  setFormStep(1);
-                  setView('form');
-                }}
-                className="hidden md:flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md transition-all"
-              >
-                <Sparkles className="w-4 h-4" />
-                Start Creating
-              </motion.button>
-            )}
-          </AnimatePresence>
-          <div className="relative">
+      <header className={`fixed top-0 left-0 right-0 z-[120] transition-all duration-300 w-full pointer-events-auto bg-[var(--glass-bg)] backdrop-blur-xl border-b border-[var(--glass-border)] shadow-sm ${isScrolled || view !== 'home' ? 'py-2 md:py-3' : 'py-3 md:py-4'}`}>
+        <div className="max-w-7xl mx-auto grid grid-cols-3 items-center px-4 md:px-8 relative w-full">
+          {/* Left: Main Menu */}
+          <div className="flex items-center gap-2 md:gap-3 relative justify-start">
             <button
-              onClick={toggleThemeMenu}
-              className={`p-2 rounded-xl transition-all ${view === 'home' ? 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800' : 'text-stone-700 dark:text-stone-300 glass-panel hover:bg-white/50 dark:hover:bg-stone-800/50'}`}
-              title="Workspace Theme"
+              onClick={toggleMainMenu}
+              className="p-2 rounded-xl transition-all text-stone-700 dark:text-stone-300 glass-panel hover:bg-white/50 dark:hover:bg-stone-800/50"
+              title="Menu"
             >
-              <Palette className="w-5 h-5 text-rose-500" />
+              <Menu className="w-5 h-5" />
             </button>
+            
+            <button
+              onClick={() => {
+                setView('home');
+                setShowMainMenu(false);
+              }}
+              className="p-2 rounded-xl transition-all text-stone-700 dark:text-stone-300 glass-panel hover:bg-white/50 dark:hover:bg-stone-800/50"
+              title="Home"
+            >
+              <Home className="w-5 h-5" />
+            </button>
+
             <AnimatePresence>
-              {showThemeMenu && (
+              {showMainMenu && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="absolute right-0 mt-3 w-48 bg-white dark:bg-stone-900 rounded-2xl overflow-hidden shadow-xl border border-stone-200 dark:border-stone-800 z-50 p-3"
+                  className="absolute left-0 top-full mt-3 w-56 bg-white dark:bg-stone-900 rounded-2xl overflow-hidden shadow-xl border border-stone-200 dark:border-stone-800 z-50 p-2"
                 >
-                  <div className="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3">Workspace Theme</div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="flex flex-col gap-1">
                     <button
-                      onClick={() => { setAppTheme('minimalist'); setShowThemeMenu(false); }}
-                      className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'minimalist' ? 'bg-stone-200 dark:bg-stone-700 text-stone-900 dark:text-white' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 dark:text-stone-400'}`}
-                      title="Minimalist"
+                      onClick={toggleTemplates}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
                     >
-                      <Square className="w-4 h-4" />
+                      <Layout className="w-4 h-4 text-rose-500 dark:text-rose-400" />
+                      Templates
                     </button>
                     <button
-                      onClick={() => { setAppTheme('ocean'); setShowThemeMenu(false); }}
-                      className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'ocean' ? 'bg-sky-200 dark:bg-sky-900 text-sky-900 dark:text-sky-100' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-sky-500 dark:text-sky-400'}`}
-                      title="Ocean Breeze"
+                      onClick={toggleLibrary}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
                     >
-                      <Droplets className="w-4 h-4" />
+                      <BookMarked className="w-4 h-4 text-indigo-500 dark:text-purple-400" />
+                      Library
                     </button>
                     <button
-                      onClick={() => { setAppTheme('forest'); setShowThemeMenu(false); }}
-                      className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'forest' ? 'bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-emerald-500 dark:text-emerald-400'}`}
-                      title="Forest Canopy"
+                      onClick={toggleHistory}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all text-left"
                     >
-                      <TreePine className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => { setAppTheme('sunset'); setShowThemeMenu(false); }}
-                      className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'sunset' ? 'bg-orange-200 dark:bg-orange-900 text-orange-900 dark:text-orange-100' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-orange-500 dark:text-orange-400'}`}
-                      title="Sunset Glow"
-                    >
-                      <Sun className="w-4 h-4" />
+                      <History className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                      History
                     </button>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-          <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all"
-            title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
-          >
-            {isDarkMode ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-indigo-500" />}
-          </button>
+
+          {/* Center: AuraCards Logo */}
+          <div className="flex flex-col items-center justify-center">
+            <div 
+              className="flex items-center gap-2 md:gap-3 cursor-pointer hover:scale-105 transition-transform"
+              onClick={() => {
+                setView('home');
+                setFormStep(1);
+              }}
+            >
+              <div className={`bg-[var(--glass-bg)] rounded-xl shadow-sm backdrop-blur-sm border border-[var(--glass-border)] transition-all duration-300 ${isScrolled || view !== 'home' ? 'p-1.5' : 'p-2'}`}>
+                <Sparkles className={`text-indigo-500 dark:text-purple-400 transition-all duration-300 ${isScrolled || view !== 'home' ? 'w-5 h-5 md:w-6 md:h-6' : 'w-8 h-8 md:w-10 md:h-10'}`} />
+              </div>
+              <h1 className={`serif font-bold tracking-tight iridescent-text transition-all duration-300 ${isScrolled || view !== 'home' ? 'text-2xl md:text-3xl' : 'text-4xl md:text-6xl'}`}>AuraCards</h1>
+            </div>
+            <p className={`text-[var(--theme-text-muted)] uppercase font-bold whitespace-nowrap transition-all duration-300 ${isScrolled || view !== 'home' ? 'text-[8px] md:text-[10px] tracking-[0.2em] mt-1' : 'text-xs md:text-sm tracking-[0.4em] mt-2'}`}>Nano Banana Pro Edition</p>
+          </div>
+
+          {/* Right: Theme & Start Button */}
+          <div className="flex items-center gap-2 md:gap-3 justify-end">
+            <AnimatePresence>
+              {isScrolled && view === 'home' && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={() => {
+                    setFormStep(1);
+                    setView('form');
+                  }}
+                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md transition-all"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Start Creating
+                </motion.button>
+              )}
+            </AnimatePresence>
+            <div className="relative">
+              <button
+                onClick={toggleThemeMenu}
+                className="p-2 rounded-xl transition-all text-stone-700 dark:text-stone-300 glass-panel hover:bg-white/50 dark:hover:bg-stone-800/50"
+                title="Workspace Theme"
+              >
+                <Palette className="w-5 h-5 text-rose-500" />
+              </button>
+              <AnimatePresence>
+                {showThemeMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                    className="absolute right-0 mt-3 w-48 bg-white dark:bg-stone-900 rounded-2xl overflow-hidden shadow-xl border border-stone-200 dark:border-stone-800 z-50 p-3"
+                  >
+                    <div className="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3">Workspace Theme</div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <button
+                        onClick={() => { setAppTheme('minimalist'); setShowThemeMenu(false); }}
+                        className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'minimalist' ? 'bg-stone-200 dark:bg-stone-700 text-stone-900 dark:text-white' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 dark:text-stone-400'}`}
+                        title="Minimalist"
+                      >
+                        <Square className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => { setAppTheme('ocean'); setShowThemeMenu(false); }}
+                        className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'ocean' ? 'bg-sky-200 dark:bg-sky-900 text-sky-900 dark:text-sky-100' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-sky-500 dark:text-sky-400'}`}
+                        title="Ocean Breeze"
+                      >
+                        <Droplets className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => { setAppTheme('forest'); setShowThemeMenu(false); }}
+                        className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'forest' ? 'bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-emerald-500 dark:text-emerald-400'}`}
+                        title="Forest Canopy"
+                      >
+                        <TreePine className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => { setAppTheme('sunset'); setShowThemeMenu(false); }}
+                        className={`p-2 rounded-lg flex justify-center items-center transition-all ${appTheme === 'sunset' ? 'bg-orange-200 dark:bg-orange-900 text-orange-900 dark:text-orange-100' : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-orange-500 dark:text-orange-400'}`}
+                        title="Sunset Glow"
+                      >
+                        <Sun className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="p-2 rounded-xl text-stone-700 dark:text-stone-300 glass-panel hover:bg-white/50 dark:hover:bg-stone-800/50 transition-all"
+              title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
+            >
+              {isDarkMode ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-indigo-500" />}
+            </button>
+          </div>
         </div>
       </header>
-
-      {/* Header */}
-      {view !== 'home' && (
-        <div className="mb-8 text-center relative mt-4 md:mt-6 z-[130]">
-          <div 
-            className="inline-flex items-center justify-center gap-3 md:gap-4 mb-3 cursor-pointer hover:scale-105 transition-transform"
-            onClick={() => {
-              setView('home');
-              setFormStep(1);
-            }}
-          >
-            <div className="p-2 md:p-3 bg-white/50 dark:bg-stone-800/50 rounded-2xl shadow-sm backdrop-blur-sm border border-stone-200/50 dark:border-stone-700/50">
-              <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-indigo-500 dark:text-purple-400" />
-            </div>
-            <h1 className="text-5xl md:text-6xl serif font-bold tracking-tight iridescent-text">AuraCards</h1>
-          </div>
-          <p className="text-stone-700 dark:text-stone-400 text-sm md:text-base uppercase tracking-[0.5em] font-bold">Nano Banana Pro Edition</p>
-        </div>
-      )}
 
       <main className="w-full max-w-7xl relative z-10">
         <AnimatePresence mode="wait">
@@ -2030,6 +2099,7 @@ export default function App() {
                 setShowLibrary={setShowLibrary} 
                 setShowHistory={setShowHistory} 
                 setFormStep={setFormStep}
+                restoreCard={restoreCard}
               />
             </motion.div>
           ) : loading ? (
@@ -2472,18 +2542,29 @@ export default function App() {
 
                               <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-3">Artistic Style</label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-2 gap-3">
                                   {(Object.keys(OUTPUT_STYLES) as Array<keyof typeof OUTPUT_STYLES>).map((style, idx) => (
                                     <button
                                       key={`${style}-${idx}`}
                                       onClick={() => setCardData({...cardData, outputStyle: style})}
-                                      className={`p-3 rounded-xl border-2 text-xs font-bold transition-all text-left ${
+                                      className={`relative flex flex-col overflow-hidden rounded-xl border-2 transition-all text-left ${
                                         cardData.outputStyle === style 
-                                        ? 'iridescent-bg text-white border-transparent shadow-md' 
-                                        : 'glass-input text-black dark:text-stone-200 hover:border-stone-200 dark:hover:border-stone-800'
+                                        ? 'border-indigo-500 shadow-md scale-[1.02]' 
+                                        : 'border-transparent glass-input hover:border-stone-300 dark:hover:border-stone-700 hover:scale-[1.02]'
                                       }`}
                                     >
-                                      {style}
+                                      <div className="w-full h-24 relative">
+                                        <img src={OUTPUT_STYLES[style].image} alt={style} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                        {cardData.outputStyle === style && (
+                                          <div className="absolute inset-0 bg-indigo-500/20 flex items-center justify-center">
+                                            <Check className="w-6 h-6 text-white drop-shadow-md" />
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className={`p-3 w-full ${cardData.outputStyle === style ? 'bg-indigo-50 dark:bg-indigo-900/30' : 'bg-white/50 dark:bg-stone-800/50'}`}>
+                                        <div className={`text-xs font-bold mb-1 ${cardData.outputStyle === style ? 'text-indigo-700 dark:text-indigo-300' : 'text-stone-900 dark:text-stone-100'}`}>{style}</div>
+                                        <div className="text-[10px] text-stone-500 dark:text-stone-400 leading-tight">{OUTPUT_STYLES[style].description}</div>
+                                      </div>
                                     </button>
                                   ))}
                                 </div>
@@ -2528,18 +2609,29 @@ export default function App() {
 
                               <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-black dark:text-stone-400 mb-3">Theme & Vibe</label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-2 gap-3">
                                   {(['classic', 'modern', 'playful', 'elegant'] as const).map((t, idx) => (
                                     <button
                                       key={`${t}-${idx}`}
                                       onClick={() => setCardData({...cardData, theme: t})}
-                                      className={`p-3 rounded-xl border-2 text-xs font-bold capitalize transition-all ${
+                                      className={`relative flex flex-col overflow-hidden rounded-xl border-2 transition-all text-left ${
                                         cardData.theme === t 
-                                        ? 'iridescent-bg text-white border-transparent shadow-md' 
-                                        : 'glass-input text-black dark:text-stone-200 hover:border-stone-200 dark:hover:border-stone-800'
+                                        ? 'border-indigo-500 shadow-md scale-[1.02]' 
+                                        : 'border-transparent glass-input hover:border-stone-300 dark:hover:border-stone-700 hover:scale-[1.02]'
                                       }`}
                                     >
-                                      {t}
+                                      <div className="w-full h-24 relative">
+                                        <img src={THEME_STYLES[t].image} alt={t} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                        {cardData.theme === t && (
+                                          <div className="absolute inset-0 bg-indigo-500/20 flex items-center justify-center">
+                                            <Check className="w-6 h-6 text-white drop-shadow-md" />
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className={`p-3 w-full ${cardData.theme === t ? 'bg-indigo-50 dark:bg-indigo-900/30' : 'bg-white/50 dark:bg-stone-800/50'}`}>
+                                        <div className={`text-xs font-bold capitalize mb-1 ${cardData.theme === t ? 'text-indigo-700 dark:text-indigo-300' : 'text-stone-900 dark:text-stone-100'}`}>{t}</div>
+                                        <div className="text-[10px] text-stone-500 dark:text-stone-400 leading-tight">{THEME_STYLES[t].description}</div>
+                                      </div>
                                     </button>
                                   ))}
                                 </div>
@@ -2591,7 +2683,7 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="flex flex-col items-center gap-8 w-full max-w-5xl"
+              className="flex flex-col items-center gap-8 w-full max-w-5xl mx-auto"
             >
               {/* Top Navigation & Actions */}
               <div className="w-full flex flex-col md:flex-row justify-between items-center gap-6 px-4">
@@ -2653,7 +2745,7 @@ export default function App() {
 
               <div className={`w-full flex flex-col ${isEditing ? 'lg:flex-row' : ''} gap-8`}>
                 {/* Single Result: The Image */}
-                <div className={`relative w-full ${isEditing ? 'lg:w-1/2' : ''} ${ASPECT_RATIOS[cardData.aspectRatio].class} rounded-[48px] overflow-hidden glass-panel group border-[12px]`}>
+                <div className={`relative ${isEditing ? 'w-full lg:w-1/2' : 'w-full max-w-2xl mx-auto'} ${ASPECT_RATIOS[cardData.aspectRatio].class} rounded-[48px] overflow-hidden glass-panel group border-[12px]`}>
                   {cardData.imageUrl ? (
                     <>
                       <img 
@@ -2813,7 +2905,7 @@ export default function App() {
               </div>
 
               {/* Message Display below */}
-              <div className="text-center max-w-3xl space-y-6 py-4">
+              <div className="text-center max-w-3xl mx-auto space-y-6 py-4">
                 <div className="flex items-center justify-center gap-4">
                   <div className="h-px w-8 bg-[#fff1f2] dark:bg-rose-900/30" />
                   <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-rose-300 dark:text-rose-700">The Message</span>
@@ -2825,15 +2917,66 @@ export default function App() {
               </div>
 
               {/* Bottom Actions */}
-              <div className="flex flex-wrap justify-center gap-6 pb-12">
-                <button
-                  disabled={loading}
-                  onClick={generateCard}
-                  className="glass-panel text-stone-700 dark:text-stone-200 px-12 py-5 rounded-full flex items-center gap-3 hover:scale-105 transition-all font-bold shadow-sm hover:shadow-md"
-                >
-                  <RefreshCw className={`w-5 h-5 text-sky-500 ${loading ? 'animate-spin' : ''}`} />
-                  Try Another Version
-                </button>
+              <div className="flex flex-col items-center gap-6 pb-12">
+                <div className="flex flex-wrap justify-center gap-6">
+                  <button
+                    disabled={loading}
+                    onClick={generateCard}
+                    className="glass-panel text-stone-700 dark:text-stone-200 px-12 py-5 rounded-full flex items-center gap-3 hover:scale-105 transition-all font-bold shadow-sm hover:shadow-md"
+                  >
+                    <RefreshCw className={`w-5 h-5 text-sky-500 ${loading ? 'animate-spin' : ''}`} />
+                    Try Another Version
+                  </button>
+                </div>
+                
+                {cardVersions.length > 1 && (
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-4 glass-panel px-6 py-3 rounded-full">
+                      <button 
+                        onClick={() => {
+                          const newIdx = Math.max(0, currentVersionIndex - 1);
+                          setCurrentVersionIndex(newIdx);
+                          setCardData(cardVersions[newIdx]);
+                        }}
+                        disabled={currentVersionIndex === 0}
+                        className="p-2 rounded-full hover:bg-stone-200 dark:hover:bg-stone-700 disabled:opacity-50 transition-colors"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <span className="text-sm font-bold text-stone-600 dark:text-stone-400">
+                        Version {currentVersionIndex + 1} of {cardVersions.length}
+                      </span>
+                      <button 
+                        onClick={() => {
+                          const newIdx = Math.min(cardVersions.length - 1, currentVersionIndex + 1);
+                          setCurrentVersionIndex(newIdx);
+                          setCardData(cardVersions[newIdx]);
+                        }}
+                        disabled={currentVersionIndex === cardVersions.length - 1}
+                        className="p-2 rounded-full hover:bg-stone-200 dark:hover:bg-stone-700 disabled:opacity-50 transition-colors"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      {cardVersions.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setCurrentVersionIndex(idx);
+                            setCardData(cardVersions[idx]);
+                          }}
+                          className={`w-2.5 h-2.5 rounded-full transition-all ${
+                            idx === currentVersionIndex 
+                              ? 'bg-indigo-500 scale-125' 
+                              : 'bg-stone-300 dark:bg-stone-700 hover:bg-stone-400 dark:hover:bg-stone-600'
+                          }`}
+                          title={`Version ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -2915,7 +3058,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md glass-panel z-50 p-8 rounded-[32px] shadow-2xl"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg glass-panel z-50 p-8 md:p-10 rounded-[32px] shadow-2xl max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-stone-800 dark:text-rose-50">Share Your Card</h3>
