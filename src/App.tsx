@@ -953,7 +953,34 @@ export default function App() {
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const cooldownEnd = localStorage.getItem('auracards_cooldown_end');
+    if (cooldownEnd) {
+      const remaining = Math.ceil((parseInt(cooldownEnd, 10) - Date.now()) / 1000);
+      if (remaining > 0) {
+        setCooldownRemaining(remaining);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (cooldownRemaining <= 0) return;
+
+    const timer = setTimeout(() => {
+      const cooldownEnd = localStorage.getItem('auracards_cooldown_end');
+      if (cooldownEnd) {
+        const remaining = Math.ceil((parseInt(cooldownEnd, 10) - Date.now()) / 1000);
+        setCooldownRemaining(remaining > 0 ? remaining : 0);
+      } else {
+        setCooldownRemaining(0);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [cooldownRemaining]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -1402,6 +1429,11 @@ export default function App() {
       return;
     }
 
+    if (cooldownRemaining > 0) {
+      setErrorMessage(`Please wait ${cooldownRemaining} seconds before generating a new card.`);
+      return;
+    }
+
     setLoading(true);
     // Clear previous image to show loading state if regenerating
     setCardData(prev => ({ ...prev, imageUrl: '', version: newVersionString }));
@@ -1609,6 +1641,11 @@ export default function App() {
           setCurrentVersionIndex(updated.length - 1);
           return updated;
         });
+
+        // Activate persistent client-side cooldown of 20 seconds
+        const cooldownEnd = Date.now() + 20000;
+        localStorage.setItem('auracards_cooldown_end', String(cooldownEnd));
+        setCooldownRemaining(20);
       }
 
       setView('preview');
@@ -2728,8 +2765,11 @@ export default function App() {
                   const prevVersion = cardVersions[currentVersionIndex];
                   const isMajor = prevVersion ? (MAJOR_FIELDS.some(field => cardData[field] !== prevVersion.data[field]) || subjectImage !== prevVersion.subjectImage) : true;
                   const isMinor = prevVersion && !isMajor ? ['message', 'fontPair', 'preWrittenMessage'].some(field => cardData[field as keyof CardData] !== prevVersion.data[field as keyof CardData]) : false;
+                  const isMajorAction = cardVersions.length === 0 || isMajor;
+                  const showCooldown = isMajorAction && cooldownRemaining > 0;
                   const btnText = cardVersions.length === 0 ? 'Generate Masterpiece' : isMajor ? 'Generate New Version' : 'Apply Updates';
-                  const isDisabled = loading || !cardData.recipient || (!isMajor && !isMinor && cardVersions.length > 0);
+                  const displayedText = showCooldown ? `Please wait ${cooldownRemaining}s to generate again...` : btnText;
+                  const isDisabled = loading || !cardData.recipient || (!isMajor && !isMinor && cardVersions.length > 0) || showCooldown;
                   
                   return (
                     <button
@@ -2737,7 +2777,7 @@ export default function App() {
                       onClick={() => generateCard(false)}
                       className="flex-1 iridescent-bg rounded-[24px] py-6 flex items-center justify-center gap-4 hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white group"
                     >
-                      <span className="text-xl font-bold tracking-wide">{btnText}</span>
+                      <span className="text-xl font-bold tracking-wide">{displayedText}</span>
                       <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform" />
                     </button>
                   );
@@ -3028,12 +3068,12 @@ export default function App() {
               <div className="flex flex-col items-center gap-6 pb-12">
                 <div className="flex flex-wrap justify-center gap-6">
                   <button
-                    disabled={loading}
+                    disabled={loading || cooldownRemaining > 0}
                     onClick={() => generateCard(true)}
-                    className="glass-panel text-stone-700 dark:text-stone-200 px-12 py-5 rounded-full flex items-center gap-3 hover:scale-105 transition-all font-bold shadow-sm hover:shadow-md"
+                    className="glass-panel text-stone-700 dark:text-stone-200 px-12 py-5 rounded-full flex items-center gap-3 hover:scale-105 transition-all font-bold shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <RefreshCw className={`w-5 h-5 text-sky-500 ${loading ? 'animate-spin' : ''}`} />
-                    Try Another Version
+                    {cooldownRemaining > 0 ? `Please wait ${cooldownRemaining}s to try again...` : 'Try Another Version'}
                   </button>
                 </div>
                 
