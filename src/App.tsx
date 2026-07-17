@@ -1445,7 +1445,7 @@ export default function App() {
       ]);
     };
 
-    const withRetry = async (fn: () => Promise<any>, maxRetries = 5, initialDelay = 3000) => {
+    const withRetry = async (fn: () => Promise<any>, maxRetries = 3, initialDelay = 3000) => {
       let retries = 0;
       while (retries < maxRetries) {
         try {
@@ -1467,7 +1467,7 @@ export default function App() {
             
           if (isRetryable && retries < maxRetries - 1) {
             retries++;
-            // Exponential backoff: 3s, 6s, 12s, 24s, 48s
+            // Exponential backoff: 3s, 6s, 12s
             const delay = initialDelay * Math.pow(2, retries - 1);
             console.log(`Retrying API call (${retries}/${maxRetries}) due to error: ${error.message || error.status}. Waiting ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -1606,7 +1606,7 @@ export default function App() {
             imageSize: cardData.imageSize
           }
         }
-      }), 300000));
+      }), 45000));
 
       const [resolvedMessage, imageResponse] = await Promise.all([
         messagePromise,
@@ -1654,8 +1654,10 @@ export default function App() {
       if (error.message?.includes("Requested entity was not found")) {
         setHasKey(false);
         setErrorMessage("Please ensure you have selected a valid API key for Nano Banana Pro.");
-      } else if (error.message?.includes("high demand") || error.code === 503 || error.message?.includes("Timeout")) {
-        setErrorMessage("The AI model is currently very busy or taking too long. Please wait a moment and try again.");
+      } else if (error.message === 'Timeout' || error.message?.toLowerCase().includes("timeout")) {
+        setErrorMessage("Generation timed out. The AI model is taking longer than 45 seconds to generate the card image. Please try again in a moment.");
+      } else if (error.message?.includes("high demand") || error.code === 503) {
+        setErrorMessage("The AI model is currently under high demand. Please wait a moment and try again.");
       } else {
         setErrorMessage("Something went wrong while generating your masterpiece. Please try again.");
       }
