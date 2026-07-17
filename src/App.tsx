@@ -91,7 +91,20 @@ interface CardData {
   preserveLikeness: boolean;
   signature: string;
   isSelf: boolean;
+  version?: string;
 }
+
+interface VersionItem {
+  data: CardData;
+  subjectImage: string | null;
+}
+
+const MAJOR_FIELDS: Array<keyof CardData> = [
+  'occasion', 'customOccasion', 'recipient', 'age', 'yearsTogether', 'degree',
+  'babyName', 'coupleNames', 'achievement', 'event', 'examType', 'loss',
+  'illness', 'reason', 'relationship', 'vibe', 'interests', 'imagePreferences',
+  'outputStyle', 'palette', 'aspectRatio', 'theme', 'signature', 'isSelf'
+];
 
 interface HistoryItem {
   id: string;
@@ -192,7 +205,7 @@ const OUTPUT_STYLES = {
   'Photorealistic': {
     prompt: "high-end photorealistic photography, natural lighting, 8k resolution, sharp focus, professional camera quality, realistic skin textures",
     description: "Looks like a real, high-quality photo.",
-    image: "https://loremflickr.com/200/200/portrait,photography/all"
+    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
   },
   '3D Render': {
     prompt: "modern 3D CGI render, Pixar style, cinematic lighting, octane render, smooth surfaces, vibrant colors, high-quality character design",
@@ -1037,9 +1050,10 @@ export default function App() {
     preserveLikeness: true,
     signature: '',
     isSelf: false,
+    version: 'v1.0',
   });
 
-  const [cardVersions, setCardVersions] = useState<CardData[]>([]);
+  const [cardVersions, setCardVersions] = useState<VersionItem[]>([]);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(-1);
 
   useEffect(() => {
@@ -1243,7 +1257,7 @@ export default function App() {
   const restoreCard = (data: CardData, subjectImg?: string) => {
     setCardData(data);
     if (subjectImg !== undefined) setSubjectImage(subjectImg);
-    setCardVersions([data]);
+    setCardVersions([{ data, subjectImage: subjectImg || null }]);
     setCurrentVersionIndex(0);
     setView('preview');
   };
@@ -1346,10 +1360,51 @@ export default function App() {
     }));
   };
 
-  const generateCard = async () => {
+  const generateCard = async (forceMajor: boolean = false) => {
+    const prevVersion = cardVersions[currentVersionIndex];
+    let isMajorChange = true;
+    let newVersionString = 'v1.0';
+
+    if (prevVersion) {
+      isMajorChange = forceMajor || MAJOR_FIELDS.some(field => cardData[field] !== prevVersion.data[field]) || subjectImage !== prevVersion.subjectImage;
+      
+      const match = prevVersion.data.version?.match(/v(\d+)\.(\d+)/);
+      const major = match ? parseInt(match[1]) : 1;
+      const minor = match ? parseInt(match[2]) : 0;
+
+      if (isMajorChange) {
+        newVersionString = `v${major + 1}.0`;
+      } else {
+        const isMinorChange = ['message', 'fontPair', 'preWrittenMessage'].some(field => cardData[field as keyof CardData] !== prevVersion.data[field as keyof CardData]);
+        if (isMinorChange) {
+          newVersionString = `v${major}.${minor + 1}`;
+        } else {
+          setView('preview');
+          return;
+        }
+      }
+    }
+
+    if (!isMajorChange) {
+      let updatedMessage = cardData.message;
+      if (prevVersion && cardData.preWrittenMessage !== prevVersion.data.preWrittenMessage) {
+        updatedMessage = cardData.preWrittenMessage || cardData.message; // Fallback to old message if cleared
+      }
+      
+      const newCardData = { ...cardData, message: updatedMessage, version: newVersionString };
+      setCardData(newCardData);
+      setCardVersions(prev => {
+        const updated = [...prev.slice(0, currentVersionIndex + 1), { data: newCardData, subjectImage }];
+        setCurrentVersionIndex(updated.length - 1);
+        return updated;
+      });
+      setView('preview');
+      return;
+    }
+
     setLoading(true);
     // Clear previous image to show loading state if regenerating
-    setCardData(prev => ({ ...prev, imageUrl: '' }));
+    setCardData(prev => ({ ...prev, imageUrl: '', version: newVersionString }));
     
     const withTimeout = (promise: Promise<any>, ms: number) => {
       return Promise.race([
@@ -1435,17 +1490,7 @@ export default function App() {
         ? "Write this as a self-affirmation or personal celebration message from a first-person perspective (using 'I', 'me', 'my'). It should be empowering and reflective." 
         : `Write this as a message for ${relationshipStr}, ${recipientStr}.`;
 
-      let message = cardData.preWrittenMessage;
-      
-      if (!message) {
-        const messageResponse = await withRetry(() => withTimeout(ai.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: `Create a short, ${vibeDescription} ${occasion} message. ${perspectiveInstruction} ${contextInfo} ${interestsStr} Keep it under 50 words. Do not use placeholders or square brackets.`,
-        }), 60000));
-        message = messageResponse.text || `Happy ${occasion}!`;
-      }
-
-      // 2. Generate Image with Nano Banana Pro
+      // 1. Prepare Image Generation Parameters (done first to enable parallel execution)
       const styleDesc = THEME_STYLES[cardData.theme].prompt;
       const outputStyleDesc = OUTPUT_STYLES[cardData.outputStyle].prompt;
       const userPrefs = cardData.imagePreferences ? `CRITICAL VISUAL INSTRUCTIONS FROM USER: The user explicitly requested the following elements to be in the image: "${cardData.imagePreferences}". You MUST include these specific features, templates, objects, or actions exactly as described.` : '';
@@ -1510,8 +1555,18 @@ export default function App() {
         });
       }
 
-      const imageResponse = await withRetry(() => withTimeout(ai.models.generateContent({
-        model: "gemini-3.1-flash-image-preview",
+      // 2. Initiate parallel execution of Text and Image Generation via Promise.all
+      let message = cardData.preWrittenMessage;
+      
+      const messagePromise = message 
+        ? Promise.resolve(message) 
+        : withRetry(() => withTimeout(ai.models.generateContent({
+            model: "gemini-3.1-flash-lite",
+            contents: `Create a short, ${vibeDescription} ${occasion} message. ${perspectiveInstruction} ${contextInfo} ${interestsStr} Keep it under 50 words. Do not use placeholders or square brackets.`,
+          }), 60000)).then(res => res.text || `Happy ${occasion}!`);
+
+      const imagePromise = withRetry(() => withTimeout(ai.models.generateContent({
+        model: "gemini-3.1-flash-lite-image",
         contents: contents,
         config: {
           imageConfig: { 
@@ -1521,6 +1576,13 @@ export default function App() {
         }
       }), 300000));
 
+      const [resolvedMessage, imageResponse] = await Promise.all([
+        messagePromise,
+        imagePromise
+      ]);
+
+      message = resolvedMessage;
+
       let imageUrl = "";
       for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
         if (part.inlineData) {
@@ -1529,7 +1591,7 @@ export default function App() {
         }
       }
 
-      const newCardData = { ...cardData, message, imageUrl };
+      const newCardData = { ...cardData, message, imageUrl, version: newVersionString };
       setCardData(newCardData);
       
       if (imageUrl) {
@@ -1543,7 +1605,7 @@ export default function App() {
         setHistory(prev => [newHistoryItem, ...prev].slice(0, 20)); // Limit to 20 items to save space
         
         setCardVersions(prev => {
-          const updated = [...prev.slice(0, currentVersionIndex + 1), newCardData];
+          const updated = [...prev.slice(0, currentVersionIndex + 1), { data: newCardData, subjectImage }];
           setCurrentVersionIndex(updated.length - 1);
           return updated;
         });
@@ -2166,12 +2228,15 @@ export default function App() {
                   { num: 3, label: 'Style' }
                 ].map((s, i) => (
                   <div key={`${s.num}-${i}`} className="flex items-center flex-1 last:flex-none">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 ${formStep >= s.num ? 'iridescent-bg text-white shadow-lg scale-110' : 'bg-stone-200 dark:bg-stone-800 text-stone-500'}`}>
+                    <button 
+                      onClick={() => setFormStep(s.num)}
+                      className="flex flex-col items-center gap-2 group focus:outline-none"
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 ${formStep >= s.num ? 'iridescent-bg text-white shadow-lg scale-110' : 'bg-stone-200 dark:bg-stone-800 text-stone-500 group-hover:bg-stone-300 dark:group-hover:bg-stone-700'}`}>
                         {s.num}
                       </div>
-                      <span className={`text-[10px] font-bold uppercase tracking-widest absolute mt-14 ${formStep >= s.num ? 'text-indigo-600 dark:text-purple-400' : 'text-stone-400'}`}>{s.label}</span>
-                    </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-widest absolute mt-14 transition-colors ${formStep >= s.num ? 'text-indigo-600 dark:text-purple-400' : 'text-stone-400 group-hover:text-stone-600 dark:group-hover:text-stone-300'}`}>{s.label}</span>
+                    </button>
                     {i < 2 && (
                       <div className={`flex-1 h-1 mx-4 rounded-full transition-all duration-500 ${formStep > s.num ? 'iridescent-bg' : 'bg-stone-200 dark:bg-stone-800'}`} />
                     )}
@@ -2230,7 +2295,9 @@ export default function App() {
                                         key={`${item.key}-${idx}`}
                                         type="button"
                                         onClick={() => {
-                                          setCardData({ ...cardData, occasion: item.key as keyof typeof OCCASIONS });
+                                          setCardData({ ...cardData, occasion: item.key as keyof typeof OCCASIONS, version: 'v1.0' });
+                                          setCardVersions([]);
+                                          setCurrentVersionIndex(-1);
                                           setFormStep(2);
                                         }}
                                         className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-200 border-2 ${
@@ -2657,24 +2724,24 @@ export default function App() {
                   </button>
                 )}
                 
-                {formStep < 3 ? (
-                  <button
-                    onClick={() => setFormStep(prev => prev + 1)}
-                    className="flex-1 iridescent-bg rounded-[24px] py-4 flex items-center justify-center gap-4 hover:scale-[1.01] transition-all text-white font-bold text-lg group"
-                  >
-                    Continue
-                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                ) : (
-                  <button
-                    disabled={loading || !cardData.recipient}
-                    onClick={generateCard}
-                    className="flex-1 iridescent-bg rounded-[24px] py-6 flex items-center justify-center gap-4 hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white group"
-                  >
-                    <span className="text-xl font-bold tracking-wide">Generate Masterpiece</span>
-                    <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                  </button>
-                )}
+                {(() => {
+                  const prevVersion = cardVersions[currentVersionIndex];
+                  const isMajor = prevVersion ? (MAJOR_FIELDS.some(field => cardData[field] !== prevVersion.data[field]) || subjectImage !== prevVersion.subjectImage) : true;
+                  const isMinor = prevVersion && !isMajor ? ['message', 'fontPair', 'preWrittenMessage'].some(field => cardData[field as keyof CardData] !== prevVersion.data[field as keyof CardData]) : false;
+                  const btnText = cardVersions.length === 0 ? 'Generate Masterpiece' : isMajor ? 'Generate New Version' : 'Apply Updates';
+                  const isDisabled = loading || !cardData.recipient || (!isMajor && !isMinor && cardVersions.length > 0);
+                  
+                  return (
+                    <button
+                      disabled={isDisabled}
+                      onClick={() => generateCard(false)}
+                      className="flex-1 iridescent-bg rounded-[24px] py-6 flex items-center justify-center gap-4 hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white group"
+                    >
+                      <span className="text-xl font-bold tracking-wide">{btnText}</span>
+                      <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                    </button>
+                  );
+                })()}
               </div>
             </motion.div>
           ) : (
@@ -2688,7 +2755,7 @@ export default function App() {
               {/* Top Navigation & Actions */}
               <div className="w-full flex flex-col md:flex-row justify-between items-center gap-6 px-4">
                 <button
-                  onClick={() => setView('form')}
+                  onClick={() => { setView('form'); setFormStep(2); }}
                   className="group flex items-center gap-3 text-stone-600 dark:text-stone-500 hover:text-indigo-500 dark:hover:text-purple-400 transition-all font-bold uppercase tracking-[0.2em] text-[10px]"
                 >
                   <div className="p-2 glass-panel rounded-xl group-hover:shadow-md transition-all">
@@ -2698,6 +2765,9 @@ export default function App() {
                 </button>
 
                 <div className="flex items-center gap-3">
+                  <span className="px-3 py-1.5 glass-panel text-indigo-600 dark:text-purple-400 font-bold text-xs rounded-full shadow-sm">
+                    {cardData.version || 'v1.0'}
+                  </span>
                   <button
                     onClick={() => setIsEditing(!isEditing)}
                     className={`flex items-center gap-2 px-6 py-3 rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all font-bold text-xs uppercase tracking-widest border ${isEditing ? 'bg-indigo-500 text-white border-indigo-600' : 'glass-panel text-stone-600 dark:text-stone-100 border-indigo-200 dark:border-indigo-800'}`}
@@ -2847,7 +2917,28 @@ export default function App() {
                           {Object.keys(FONT_PAIRS).map(font => (
                             <button
                               key={font}
-                              onClick={() => setCardData({ ...cardData, fontPair: font as keyof typeof FONT_PAIRS })}
+                              onClick={() => {
+                                const newFont = font as keyof typeof FONT_PAIRS;
+                                if (cardData.fontPair === newFont) return;
+                                
+                                const prevVersion = cardVersions[currentVersionIndex];
+                                let newVersionString = cardData.version || 'v1.0';
+                                
+                                if (prevVersion) {
+                                  const match = prevVersion.data.version?.match(/v(\d+)\.(\d+)/);
+                                  const major = match ? parseInt(match[1]) : 1;
+                                  const minor = match ? parseInt(match[2]) : 0;
+                                  newVersionString = `v${major}.${minor + 1}`;
+                                }
+                                
+                                const newCardData = { ...cardData, fontPair: newFont, version: newVersionString };
+                                setCardData(newCardData);
+                                setCardVersions(prev => {
+                                  const updated = [...prev.slice(0, currentVersionIndex + 1), { data: newCardData, subjectImage }];
+                                  setCurrentVersionIndex(updated.length - 1);
+                                  return updated;
+                                });
+                              }}
                               className={`p-4 rounded-2xl border-2 transition-all text-left ${
                                 cardData.fontPair === font 
                                   ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
@@ -2895,6 +2986,23 @@ export default function App() {
                         <textarea
                           value={cardData.message}
                           onChange={(e) => setCardData({ ...cardData, message: e.target.value })}
+                          onBlur={() => {
+                            const prevVersion = cardVersions[currentVersionIndex];
+                            if (prevVersion && cardData.message !== prevVersion.data.message) {
+                              const match = prevVersion.data.version?.match(/v(\d+)\.(\d+)/);
+                              const major = match ? parseInt(match[1]) : 1;
+                              const minor = match ? parseInt(match[2]) : 0;
+                              const newVersionString = `v${major}.${minor + 1}`;
+                              
+                              const newCardData = { ...cardData, version: newVersionString };
+                              setCardData(newCardData);
+                              setCardVersions(prev => {
+                                const updated = [...prev.slice(0, currentVersionIndex + 1), { data: newCardData, subjectImage }];
+                                setCurrentVersionIndex(updated.length - 1);
+                                return updated;
+                              });
+                            }
+                          }}
                           className="w-full h-32 glass-input rounded-2xl p-4 text-sm outline-none resize-none"
                           placeholder="Your card message..."
                         />
@@ -2921,7 +3029,7 @@ export default function App() {
                 <div className="flex flex-wrap justify-center gap-6">
                   <button
                     disabled={loading}
-                    onClick={generateCard}
+                    onClick={() => generateCard(true)}
                     className="glass-panel text-stone-700 dark:text-stone-200 px-12 py-5 rounded-full flex items-center gap-3 hover:scale-105 transition-all font-bold shadow-sm hover:shadow-md"
                   >
                     <RefreshCw className={`w-5 h-5 text-sky-500 ${loading ? 'animate-spin' : ''}`} />
@@ -2936,7 +3044,8 @@ export default function App() {
                         onClick={() => {
                           const newIdx = Math.max(0, currentVersionIndex - 1);
                           setCurrentVersionIndex(newIdx);
-                          setCardData(cardVersions[newIdx]);
+                          setCardData(cardVersions[newIdx].data);
+                          setSubjectImage(cardVersions[newIdx].subjectImage);
                         }}
                         disabled={currentVersionIndex === 0}
                         className="p-2 rounded-full hover:bg-stone-200 dark:hover:bg-stone-700 disabled:opacity-50 transition-colors"
@@ -2950,7 +3059,8 @@ export default function App() {
                         onClick={() => {
                           const newIdx = Math.min(cardVersions.length - 1, currentVersionIndex + 1);
                           setCurrentVersionIndex(newIdx);
-                          setCardData(cardVersions[newIdx]);
+                          setCardData(cardVersions[newIdx].data);
+                          setSubjectImage(cardVersions[newIdx].subjectImage);
                         }}
                         disabled={currentVersionIndex === cardVersions.length - 1}
                         className="p-2 rounded-full hover:bg-stone-200 dark:hover:bg-stone-700 disabled:opacity-50 transition-colors"
@@ -2964,7 +3074,8 @@ export default function App() {
                           key={idx}
                           onClick={() => {
                             setCurrentVersionIndex(idx);
-                            setCardData(cardVersions[idx]);
+                            setCardData(cardVersions[idx].data);
+                            setSubjectImage(cardVersions[idx].subjectImage);
                           }}
                           className={`w-2.5 h-2.5 rounded-full transition-all ${
                             idx === currentVersionIndex 
