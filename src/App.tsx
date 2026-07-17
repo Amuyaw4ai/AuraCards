@@ -744,6 +744,21 @@ const HomePage = ({
   setFormStep: (step: number) => void;
   restoreCard: (data: any, subjectImg?: string) => void;
 }) => {
+  const [galleryLimit, setGalleryLimit] = useState<number>(10);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setGalleryLimit(7);
+      } else {
+        setGalleryLimit(10);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleStart = (preset?: any) => {
     if (preset) {
       setCardData((prev: any) => ({ ...prev, ...preset }));
@@ -829,7 +844,7 @@ const HomePage = ({
           <h2 className="text-3xl font-black text-stone-900 dark:text-stone-100 tracking-tight">Inspiration Gallery</h2>
         </div>
         <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
-          {TEMPLATES.map((template, i) => (
+          {TEMPLATES.slice(0, galleryLimit).map((template, i) => (
             <div key={i} className="break-inside-avoid relative group rounded-[32px] overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 flex flex-col" onClick={() => handleStart(template.settings)}>
               <div className="relative w-full aspect-square overflow-hidden">
                 <img src={template.image} alt={template.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
@@ -1673,7 +1688,7 @@ export default function App() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8">
         <BackgroundOrbs />
-        <div className="max-w-md text-center space-y-6 glass-panel p-10 rounded-[32px]">
+        <div className="max-w-md text-center space-y-6 glass-panel p-6 sm:p-10 rounded-[32px]">
           <AlertCircle className="w-16 h-16 text-rose-500 mx-auto" />
           <h2 className="text-3xl serif italic text-stone-900">API Key Required</h2>
           <p className="text-stone-600 leading-relaxed">
@@ -1694,7 +1709,7 @@ export default function App() {
   }
 
   return (
-    <div className={`relative min-h-screen flex flex-col items-center p-4 md:p-8 ${view === 'home' ? 'justify-center' : 'justify-start pt-32 md:pt-40'}`} onPaste={handlePaste}>
+    <div className={`relative min-h-screen flex flex-col items-center p-4 md:p-8 ${view === 'home' ? 'justify-center' : 'justify-start pt-24 sm:pt-32 md:pt-40'}`} onPaste={handlePaste}>
       <BackgroundOrbs />
       {/* Templates View */}
       <AnimatePresence>
@@ -2257,10 +2272,10 @@ export default function App() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="glass-panel rounded-[40px] p-10 md:p-12 space-y-8"
+              className="glass-panel rounded-[24px] sm:rounded-[40px] p-4 sm:p-8 md:p-12 space-y-8"
             >
               {/* Stepper */}
-              <div className="flex justify-between items-center mb-8 px-2 md:px-12">
+              <div className="flex justify-between items-center mb-8 px-1 sm:px-2 md:px-12">
                 {[
                   { num: 1, label: 'Occasion' },
                   { num: 2, label: 'Details' },
@@ -2269,15 +2284,15 @@ export default function App() {
                   <div key={`${s.num}-${i}`} className="flex items-center flex-1 last:flex-none">
                     <button 
                       onClick={() => setFormStep(s.num)}
-                      className="flex flex-col items-center gap-2 group focus:outline-none"
+                      className="flex flex-col items-center gap-2 group focus:outline-none relative"
                     >
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 ${formStep >= s.num ? 'iridescent-bg text-white shadow-lg scale-110' : 'bg-stone-200 dark:bg-stone-800 text-stone-500 group-hover:bg-stone-300 dark:group-hover:bg-stone-700'}`}>
                         {s.num}
                       </div>
-                      <span className={`text-[10px] font-bold uppercase tracking-widest absolute mt-14 transition-colors ${formStep >= s.num ? 'text-indigo-600 dark:text-purple-400' : 'text-stone-400 group-hover:text-stone-600 dark:group-hover:text-stone-300'}`}>{s.label}</span>
+                      <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest absolute left-1/2 -translate-x-1/2 mt-14 whitespace-nowrap transition-colors ${formStep >= s.num ? 'text-indigo-600 dark:text-purple-400' : 'text-stone-400 group-hover:text-stone-600 dark:group-hover:text-stone-300'}`}>{s.label}</span>
                     </button>
                     {i < 2 && (
-                      <div className={`flex-1 h-1 mx-4 rounded-full transition-all duration-500 ${formStep > s.num ? 'iridescent-bg' : 'bg-stone-200 dark:bg-stone-800'}`} />
+                      <div className={`flex-1 h-1 mx-2 sm:mx-4 rounded-full transition-all duration-500 ${formStep > s.num ? 'iridescent-bg' : 'bg-stone-200 dark:bg-stone-800'}`} />
                     )}
                   </div>
                 ))}
@@ -2753,37 +2768,58 @@ export default function App() {
               </div>
 
               {/* Navigation Buttons */}
-              <div className="pt-10 flex gap-4">
+              <div className="pt-10 flex flex-wrap sm:flex-nowrap gap-4 items-center justify-between">
                 {formStep > 1 && (
                   <button
                     onClick={() => setFormStep(prev => prev - 1)}
-                    className="px-6 py-4 rounded-[24px] font-bold text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all"
+                    className={`order-1 sm:order-1 ${formStep === 2 ? 'w-[47%]' : 'w-auto sm:w-auto'} sm:w-auto px-4 py-3 sm:px-6 sm:py-4 rounded-[24px] font-bold text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all flex items-center justify-center gap-2 text-sm sm:text-base border border-transparent hover:border-stone-200 dark:hover:border-stone-700`}
                   >
-                    Back
+                    <ChevronLeft className="w-5 h-5" />
+                    <span>Back</span>
                   </button>
                 )}
                 
-                {(() => {
+                {formStep === 1 && cardData.occasion && (
+                  <button
+                    onClick={() => setFormStep(2)}
+                    className="order-2 sm:order-3 w-full sm:w-auto px-6 py-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-stone-800 dark:hover:bg-stone-700 dark:text-purple-400 font-bold rounded-[24px] transition-all flex items-center justify-center gap-2 border border-indigo-100 dark:border-stone-700 ml-auto"
+                  >
+                    <span>Next: Details</span>
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                )}
+                
+                {formStep > 1 && (() => {
                   const prevVersion = cardVersions[currentVersionIndex];
                   const isMajor = prevVersion ? (MAJOR_FIELDS.some(field => cardData[field] !== prevVersion.data[field]) || subjectImage !== prevVersion.subjectImage) : true;
                   const isMinor = prevVersion && !isMajor ? ['message', 'fontPair', 'preWrittenMessage'].some(field => cardData[field as keyof CardData] !== prevVersion.data[field as keyof CardData]) : false;
                   const isMajorAction = cardVersions.length === 0 || isMajor;
                   const showCooldown = isMajorAction && cooldownRemaining > 0;
                   const btnText = cardVersions.length === 0 ? 'Generate Masterpiece' : isMajor ? 'Generate New Version' : 'Apply Updates';
-                  const displayedText = showCooldown ? `Please wait ${cooldownRemaining}s to generate again...` : btnText;
+                  const displayedText = showCooldown ? `Please wait ${cooldownRemaining}s...` : btnText;
                   const isDisabled = loading || !cardData.recipient || (!isMajor && !isMinor && cardVersions.length > 0) || showCooldown;
                   
                   return (
                     <button
                       disabled={isDisabled}
                       onClick={() => generateCard(false)}
-                      className="flex-1 iridescent-bg rounded-[24px] py-6 flex items-center justify-center gap-4 hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white group"
+                      className={`order-3 sm:order-2 ${formStep === 2 ? 'w-full' : 'flex-1'} sm:w-auto sm:flex-1 iridescent-bg rounded-[20px] py-4 px-6 flex items-center justify-center gap-3 hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white group`}
                     >
-                      <span className="text-xl font-bold tracking-wide">{displayedText}</span>
-                      <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                      <span className="text-base sm:text-lg font-bold tracking-wide">{displayedText}</span>
+                      <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
                     </button>
                   );
                 })()}
+
+                {formStep === 2 && (
+                  <button
+                    onClick={() => setFormStep(3)}
+                    className="order-2 sm:order-3 w-[47%] sm:w-auto px-4 py-3 sm:px-6 sm:py-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-stone-800 dark:hover:bg-stone-700 dark:text-purple-400 font-bold rounded-[24px] transition-all flex items-center justify-center gap-2 border border-indigo-100 dark:border-stone-700 text-sm sm:text-base"
+                  >
+                    <span>Style Options</span>
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                )}
               </div>
             </motion.div>
           ) : (
@@ -2806,51 +2842,57 @@ export default function App() {
                   Back to Studio
                 </button>
 
-                <div className="flex items-center gap-3">
-                  <span className="px-3 py-1.5 glass-panel text-indigo-600 dark:text-purple-400 font-bold text-xs rounded-full shadow-sm">
+                <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-3 flex-wrap sm:flex-nowrap w-full sm:w-auto">
+                  <span className="px-2.5 py-1.5 sm:px-3 sm:py-1.5 glass-panel text-indigo-600 dark:text-purple-400 font-bold text-[10px] sm:text-xs rounded-full shadow-sm flex-shrink-0">
                     {cardData.version || 'v1.0'}
                   </span>
                   <button
                     onClick={() => setIsEditing(!isEditing)}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all font-bold text-xs uppercase tracking-widest border ${isEditing ? 'bg-indigo-500 text-white border-indigo-600' : 'glass-panel text-stone-600 dark:text-stone-100 border-indigo-200 dark:border-indigo-800'}`}
+                    className={`flex items-center justify-center gap-2 p-3 sm:px-5 sm:py-3 rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all font-bold text-xs uppercase tracking-widest border flex-shrink-0 ${isEditing ? 'bg-indigo-500 text-white border-indigo-600' : 'glass-panel text-stone-600 dark:text-stone-100 border-indigo-200 dark:border-indigo-800'}`}
+                    title={isEditing ? 'Done Editing' : 'Edit Design'}
                   >
                     <Palette className={`w-4 h-4 ${isEditing ? 'text-white' : 'text-indigo-500 dark:text-purple-400'}`} />
-                    {isEditing ? 'Done Editing' : 'Edit Design'}
+                    <span className="hidden sm:inline">{isEditing ? 'Done Editing' : 'Edit Design'}</span>
                   </button>
                   <button
                     onClick={copyMessage}
-                    className="flex items-center gap-2 px-6 py-3 glass-panel rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all text-stone-600 dark:text-stone-100 font-bold text-xs uppercase tracking-widest"
+                    className="flex items-center justify-center gap-2 p-3 sm:px-5 sm:py-3 glass-panel rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all text-stone-600 dark:text-stone-100 font-bold text-xs uppercase tracking-widest flex-shrink-0 border border-indigo-100 dark:border-stone-800"
+                    title="Copy Message"
                   >
                     {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-indigo-500 dark:text-purple-400" />}
-                    {copied ? 'Copied!' : 'Copy Message'}
+                    <span className="hidden sm:inline">{copied ? 'Copied!' : 'Copy Message'}</span>
                   </button>
                   <button
                     onClick={() => handleDownload()}
-                    className="flex items-center gap-2 px-6 py-3 iridescent-bg rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all text-white font-bold text-xs uppercase tracking-widest"
+                    className="flex items-center justify-center gap-2 p-3 sm:px-5 sm:py-3 iridescent-bg rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all text-white font-bold text-xs uppercase tracking-widest flex-shrink-0"
+                    title="Download PNG"
                   >
                     <ImageIcon className="w-4 h-4" />
-                    Download PNG
+                    <span className="hidden sm:inline">Download PNG</span>
                   </button>
                   <button
                     onClick={() => handleDownloadPDF()}
-                    className="flex items-center gap-2 px-6 py-3 glass-panel rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all text-stone-600 dark:text-stone-100 font-bold text-xs uppercase tracking-widest border border-indigo-200 dark:border-indigo-800"
+                    className="flex items-center justify-center gap-2 p-3 sm:px-5 sm:py-3 glass-panel rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all text-stone-600 dark:text-stone-100 font-bold text-xs uppercase tracking-widest flex-shrink-0 border border-indigo-200 dark:border-indigo-800"
+                    title="Download PDF"
                   >
                     <FileText className="w-4 h-4 text-indigo-500 dark:text-purple-400" />
-                    Download PDF
+                    <span className="hidden sm:inline">Download PDF</span>
                   </button>
                   <button
                     onClick={handleShare}
-                    className="flex items-center gap-2 px-6 py-3 glass-panel rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all text-stone-600 dark:text-stone-100 font-bold text-xs uppercase tracking-widest border border-indigo-200 dark:border-indigo-800"
+                    className="flex items-center justify-center gap-2 p-3 sm:px-5 sm:py-3 glass-panel rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all text-stone-600 dark:text-stone-100 font-bold text-xs uppercase tracking-widest flex-shrink-0 border border-indigo-200 dark:border-indigo-800"
+                    title="Share"
                   >
                     <Share2 className="w-4 h-4 text-indigo-500 dark:text-purple-400" />
-                    Share
+                    <span className="hidden sm:inline">Share</span>
                   </button>
                   <button
                     onClick={saveToLibrary}
-                    className="flex items-center gap-2 px-6 py-3 glass-panel rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all text-stone-600 dark:text-stone-100 font-bold text-xs uppercase tracking-widest border border-indigo-200 dark:border-indigo-800"
+                    className="flex items-center justify-center gap-2 p-3 sm:px-5 sm:py-3 glass-panel rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all text-stone-600 dark:text-stone-100 font-bold text-xs uppercase tracking-widest flex-shrink-0 border border-indigo-200 dark:border-indigo-800"
+                    title="Save to Library"
                   >
                     {savedToLibrary ? <Check className="w-4 h-4 text-emerald-500" /> : <BookmarkPlus className="w-4 h-4 text-indigo-500 dark:text-purple-400" />}
-                    {savedToLibrary ? 'Saved' : 'Save'}
+                    <span className="hidden sm:inline">{savedToLibrary ? 'Saved' : 'Save'}</span>
                   </button>
                 </div>
               </div>
@@ -3211,7 +3253,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg glass-panel z-50 p-8 md:p-10 rounded-[32px] shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-32px)] sm:w-full max-w-lg glass-panel z-50 p-5 sm:p-8 md:p-10 rounded-[32px] shadow-2xl max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-stone-800 dark:text-rose-50">Share Your Card</h3>
