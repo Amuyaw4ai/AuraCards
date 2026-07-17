@@ -1005,23 +1005,77 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Synchronized browser navigation history / router
   useEffect(() => {
-    if (showShareModal) {
-      window.history.pushState({ modal: 'share' }, '');
-      
-      const handlePopState = () => {
-        setShowShareModal(false);
-      };
-      
-      window.addEventListener('popstate', handlePopState);
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-        if (window.history.state?.modal === 'share') {
-          window.history.back();
-        }
-      };
+    if (!isLoaded) return;
+
+    // Set initial state in browser history if not present
+    if (!window.history.state) {
+      window.history.replaceState({
+        view,
+        showTemplates,
+        showLibrary,
+        showHistory,
+        showShareModal,
+        showPreWrittenModal,
+        formStep
+      }, '');
     }
-  }, [showShareModal]);
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+      if (state) {
+        setView(state.view || 'home');
+        setShowTemplates(!!state.showTemplates);
+        setShowLibrary(!!state.showLibrary);
+        setShowHistory(!!state.showHistory);
+        setShowShareModal(!!state.showShareModal);
+        setShowPreWrittenModal(!!state.showPreWrittenModal);
+        if (state.formStep !== undefined) {
+          setFormStep(state.formStep);
+        }
+      } else {
+        // Fallback to default state
+        setView('home');
+        setShowTemplates(false);
+        setShowLibrary(false);
+        setShowHistory(false);
+        setShowShareModal(false);
+        setShowPreWrittenModal(false);
+        setFormStep(1);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isLoaded]);
+
+  // Synchronize React state changes with browser history
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const hState = window.history.state;
+    const matches = hState &&
+                    hState.view === view &&
+                    hState.showTemplates === showTemplates &&
+                    hState.showLibrary === showLibrary &&
+                    hState.showHistory === showHistory &&
+                    hState.showShareModal === showShareModal &&
+                    hState.showPreWrittenModal === showPreWrittenModal &&
+                    hState.formStep === formStep;
+
+    if (!matches) {
+      window.history.pushState({
+        view,
+        showTemplates,
+        showLibrary,
+        showHistory,
+        showShareModal,
+        showPreWrittenModal,
+        formStep
+      }, '');
+    }
+  }, [view, showTemplates, showLibrary, showHistory, showShareModal, showPreWrittenModal, formStep, isLoaded]);
 
   const toggleMainMenu = () => {
     setShowMainMenu(!showMainMenu);
