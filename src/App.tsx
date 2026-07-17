@@ -1005,6 +1005,24 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (showShareModal) {
+      window.history.pushState({ modal: 'share' }, '');
+      
+      const handlePopState = () => {
+        setShowShareModal(false);
+      };
+      
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+        if (window.history.state?.modal === 'share') {
+          window.history.back();
+        }
+      };
+    }
+  }, [showShareModal]);
+
   const toggleMainMenu = () => {
     setShowMainMenu(!showMainMenu);
     setShowTemplates(false);
@@ -3247,13 +3265,13 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowShareModal(false)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100]"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-32px)] sm:w-full max-w-lg glass-panel z-50 p-5 sm:p-8 md:p-10 rounded-[32px] shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-48px)] sm:w-full max-w-lg glass-panel z-[110] p-5 sm:p-8 md:p-10 rounded-[32px] shadow-2xl max-h-[80vh] sm:max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-stone-800 dark:text-rose-50">Share Your Card</h3>
