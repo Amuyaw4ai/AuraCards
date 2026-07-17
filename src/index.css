@@ -147,6 +147,16 @@ body {
   @apply font-sans text-lg min-h-screen transition-colors duration-500;
 }
 
+/* Hide scrollbars globally for a seamless, immersive experience */
+::-webkit-scrollbar {
+  display: none !important;
+}
+
+* {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+
 .glass-panel {
   background: var(--glass-bg);
   backdrop-filter: blur(24px);
